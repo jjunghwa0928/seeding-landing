@@ -96,7 +96,7 @@
   .brand img{height:28px;width:28px;border-radius:6px;}
   .brand span{font-weight:700;color:var(--ink);font-size:17px;letter-spacing:-0.01em;}
   .topbar-cta{display:flex;align-items:center;gap:10px;}
-  @media (max-width:640px){ .topbar-cta{display:none;} }
+  @media (max-width:1024px){ .topbar-cta{display:none;} }
 
   /* ---------- Sticky CTA bar (mobile) ---------- */
   .sticky-cta{
@@ -139,21 +139,26 @@
   .secnav a:hover,.secnav a.is-active{background:var(--blue);transform:scale(1.3);}
   .secnav a span{position:absolute;right:20px;top:50%;transform:translateY(-50%);white-space:nowrap;font-size:12px;font-weight:600;color:#fff;background:var(--ink);padding:4px 10px;border-radius:999px;opacity:0;pointer-events:none;transition:opacity var(--dur-2) var(--ease);}
   .secnav a:hover span,.secnav a:focus-visible span{opacity:1;}
+  .menu-btn{display:none;}
   @media (max-width:1024px){
-    :root{--secbar-h:46px;}
-    .secnav{position:fixed;left:0;right:0;top:var(--topbar-h);transform:none;z-index:55;flex-direction:row;gap:8px;
-      height:var(--secbar-h);padding:0 16px;align-items:center;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;
-      background:rgba(255,255,255,0.86);backdrop-filter:saturate(180%) blur(20px);-webkit-backdrop-filter:saturate(180%) blur(20px);border-bottom:1px solid var(--hairline);}
-    .secnav::-webkit-scrollbar{display:none;}
-    .secnav a{width:auto;height:30px;border-radius:999px;background:transparent;border:1px solid var(--hairline);padding:0 12px;display:flex;align-items:center;flex:0 0 auto;color:var(--ink-muted-80);font-size:13px;font-weight:500;transform:none;}
-    .secnav a span{position:static;transform:none;opacity:1;pointer-events:auto;background:none;color:inherit;padding:0;font-size:inherit;font-weight:inherit;}
-    .secnav a:hover,.secnav a.is-active{background:var(--ink);color:#fff;border-color:var(--ink);transform:none;}
-    .secnav-toggle,.secnav-sheet,.secnav-backdrop{display:none !important;}
-    body.secnav-on .cat-stickybar{top:calc(var(--topbar-h) + var(--secbar-h));}
-    body.secnav-on .mag-chapter{scroll-margin-top:calc(var(--topbar-h) + var(--secbar-h) + var(--catbar-h) + 8px);}
+    .secnav{display:none;}
+    .menu-btn{display:flex;align-items:center;justify-content:center;width:40px;height:40px;border-radius:10px;color:var(--ink);margin-right:-8px;}
+    .menu-btn svg{width:22px;height:22px;}
+    .menu-btn .ic-x{display:none;}
+    body.menu-open .menu-btn .ic-bars{display:none;}
+    body.menu-open .menu-btn .ic-x{display:block;}
+    .menu-panel{position:fixed;left:0;right:0;top:var(--topbar-h);z-index:59;background:rgba(255,255,255,0.96);backdrop-filter:saturate(180%) blur(20px);-webkit-backdrop-filter:saturate(180%) blur(20px);
+      border-bottom:1px solid var(--hairline);padding:6px 22px 18px;transform:translateY(-8px);opacity:0;pointer-events:none;transition:opacity var(--dur-2) var(--ease),transform var(--dur-2) var(--ease);}
+    body.menu-open .menu-panel{opacity:1;transform:none;pointer-events:auto;}
+    .menu-panel a.menu-link{display:block;padding:13px 0;border-bottom:1px solid var(--hairline);color:var(--ink);font-size:17px;font-weight:500;}
+    .menu-panel a.menu-link.is-active{color:var(--blue);font-weight:600;}
+    .menu-panel .menu-ctas{display:flex;gap:10px;margin-top:16px;}
+    .menu-panel .menu-ctas .btn{flex:1;height:44px;font-size:15px;padding:0 10px;}
+    .menu-backdrop{position:fixed;inset:0;z-index:58;background:rgba(0,0,0,0.25);opacity:0;pointer-events:none;transition:opacity var(--dur-2) var(--ease);}
+    body.menu-open .menu-backdrop{opacity:1;pointer-events:auto;}
   }
-  @media (min-width:1025px){ .secnav-sheet,.secnav-backdrop,.secnav-toggle{display:none;} :root{--secbar-h:0px;} }
-  section[id]{scroll-margin-top:calc(var(--topbar-h) + var(--secbar-h, 0px) + 8px);}
+  @media (min-width:1025px){ .menu-panel,.menu-backdrop{display:none;} }
+  section[id]{scroll-margin-top:calc(var(--topbar-h) + 8px);}
 
   /* ---------- HERO ---------- */
   .hero{position:relative;background:var(--ink);color:#fff;padding:120px 0 64px;overflow:hidden;}
@@ -264,7 +269,7 @@
      to "turn off" stickiness at the section boundary). top offset matches
      the fixed topbar's rendered height (76px: 14+14 padding + 48 min-height)
      so the two bars sit flush, not overlapping. */
-  :root{--topbar-h:56px;--catbar-h:68px;} @media (max-width:734px){:root{--topbar-h:52px;--catbar-h:64px;}}
+  :root{--topbar-h:56px;--catbar-h:68px;} @media (max-width:734px){:root{--topbar-h:52px;--catbar-h:50px;}}
   .cat-stickybar{
     position:sticky;top:var(--topbar-h);z-index:40;margin:0 0 44px;
     background:rgba(255,255,255,0.82);backdrop-filter:saturate(180%) blur(20px);-webkit-backdrop-filter:saturate(180%) blur(20px);
@@ -285,6 +290,17 @@
   }
   .cat-chip.is-active{background:var(--ink);color:#fff;border-color:var(--ink);}
   .cat-chip:hover:not(.is-active){border-color:var(--ink);}
+  .cat-label{position:sticky;left:0;z-index:1;background:rgba(255,255,255,0.96);padding-right:8px;flex:0 0 auto;font-size:13px;font-weight:600;color:var(--ink);letter-spacing:-0.01em;margin-right:6px;white-space:nowrap;display:flex;align-items:center;gap:6px;}
+  .cat-label::before{content:"";width:7px;height:7px;border-radius:50%;background:#1d7a3f;box-shadow:0 0 0 3px rgba(29,122,63,0.18);}
+  @media (max-width:734px){
+    .cat-stickybar{margin-bottom:28px;}
+    .cat-stickybar-inner{padding:0 0 0 16px;height:var(--catbar-h);gap:6px;scroll-snap-type:none;}
+    .cat-chip{scroll-snap-align:none;}
+    .cat-stickybar-inner::after{content:"";flex:0 0 16px;}
+    .cat-label{left:0;padding-left:16px;margin-left:-16px;}
+    .cat-label{font-size:12px;margin-right:4px;}
+    .cat-chip{min-height:32px;padding:0 12px;font-size:13px;}
+  }
 
   .mag-count{text-align:center;font-size:13px;color:var(--ink-muted-56);margin:-20px 0 32px;}
 
@@ -491,8 +507,26 @@
       <a class="btn btn-outline btn-sm" href="tool.html">예상 실적 확인</a>
       <a class="btn btn-blue btn-sm" href="https://pf.kakao.com/_TyEtn/chat" target="_blank" rel="noopener">카카오톡 문의</a>
     </div>
+    <button class="menu-btn" id="menuBtn" type="button" aria-label="메뉴" aria-expanded="false" aria-controls="menuPanel">
+      <svg class="ic-bars" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+      <svg class="ic-x" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
+    </button>
   </div>
 </div>
+<div class="menu-backdrop" id="menuBackdrop"></div>
+<nav class="menu-panel" id="menuPanel" aria-label="섹션 메뉴">
+  <a class="menu-link" href="#gallery">실시간 리뷰 현황</a>
+  <a class="menu-link" href="#why">왜 시딩인가</a>
+  <a class="menu-link" href="#market">일본 시장 경험</a>
+  <a class="menu-link" href="#flow">진행 과정</a>
+  <a class="menu-link" href="#how">운영 · 리포트</a>
+  <a class="menu-link" href="#brands">함께한 브랜드</a>
+  <a class="menu-link" href="#handoff">예상 실적 · 문의</a>
+  <div class="menu-ctas">
+    <a class="btn btn-outline" href="tool.html">예상 실적 확인</a>
+    <a class="btn btn-blue" href="https://pf.kakao.com/_TyEtn/chat" target="_blank" rel="noopener">카카오톡 문의</a>
+  </div>
+</nav>
 
 <!-- ===================== HERO ===================== -->
 <header class="hero" id="hero">
@@ -665,7 +699,7 @@
 
 <!-- ===================== SECTION NAV ===================== -->
 <nav class="secnav" id="secnav" aria-label="섹션 이동">
-  <a href="#gallery"><span>리뷰 매거진</span></a>
+  <a href="#gallery"><span>실시간 리뷰 현황</span></a>
   <a href="#why"><span>왜 시딩인가</span></a>
   <a href="#market"><span>일본 시장 경험</span></a>
   <a href="#flow"><span>진행 과정</span></a>
@@ -686,6 +720,7 @@
        scroll-spies the active chapter via IntersectionObserver below. -->
   <div class="cat-stickybar" id="catStickybar">
     <nav class="cat-stickybar-inner" aria-label="리뷰 카테고리 바로가기">
+      <span class="cat-label">실시간 리뷰 현황</span>
       <a class="cat-chip" data-jump="skin" href="#chapter-skin">스킨케어</a>
       <a class="cat-chip" data-jump="tone" href="#chapter-tone">색조</a>
       <a class="cat-chip" data-jump="body" href="#chapter-body">바디</a>
@@ -1310,8 +1345,12 @@
         c.classList.toggle('is-active', active);
         if(active && stickybar){
           var bar = stickybar.querySelector('.cat-stickybar-inner');
-          var left = c.offsetLeft - (bar.clientWidth - c.offsetWidth) / 2;
-          bar.scrollTo({left: Math.max(0, left), behavior: prefersReduced ? 'auto' : 'smooth'});
+          var lab = bar.querySelector('.cat-label');
+          var labW = lab ? lab.offsetWidth + 8 : 0;
+          var visL = bar.scrollLeft + labW, visR = bar.scrollLeft + bar.clientWidth;
+          if(c.offsetLeft < visL || c.offsetLeft + c.offsetWidth > visR){
+            bar.scrollTo({left: Math.max(0, c.offsetLeft - labW - 8), behavior: prefersReduced ? 'auto' : 'smooth'});
+          }
         }
       });
     }
@@ -1409,23 +1448,24 @@
     }
   }
 
-  /* Section nav: show after hero, scroll-spy active section (PC dots / mobile chip bar) */
+  /* Section nav: PC side dots (after hero) + mobile hamburger menu; scroll-spy both */
   (function(){
     var nav = document.getElementById('secnav');
-    if(!nav) return;
-    var links = Array.prototype.slice.call(nav.querySelectorAll('a'));
+    var menuBtn = document.getElementById('menuBtn'), panel = document.getElementById('menuPanel'), backdrop = document.getElementById('menuBackdrop');
+    var links = Array.prototype.slice.call(document.querySelectorAll('#secnav a, #menuPanel a.menu-link'));
     var ids = ['gallery','why','market','flow','how','brands','handoff'];
     var secs = ids.map(function(id){ return document.getElementById(id); }).filter(Boolean);
     var heroEl2 = document.getElementById('hero');
-    function setActive(id){
-      links.forEach(function(a){
-        var on = a.getAttribute('href') === '#' + id;
-        a.classList.toggle('is-active', on);
-        if(on && window.matchMedia('(max-width:1024px)').matches && a.scrollIntoView){
-          var r=a.getBoundingClientRect(), nr=nav.getBoundingClientRect();
-          if(r.left<nr.left||r.right>nr.right) nav.scrollTo({left:a.offsetLeft-16,behavior:prefersReduced?'auto':'smooth'});
-        }
+    function setActive(id){ links.forEach(function(a){ a.classList.toggle('is-active', a.getAttribute('href') === '#' + id); }); }
+    function closeMenu(){ document.body.classList.remove('menu-open'); if(menuBtn) menuBtn.setAttribute('aria-expanded','false'); }
+    if(menuBtn && panel){
+      menuBtn.addEventListener('click', function(){
+        var open = !document.body.classList.contains('menu-open');
+        document.body.classList.toggle('menu-open', open); menuBtn.setAttribute('aria-expanded', open?'true':'false');
       });
+      if(backdrop) backdrop.addEventListener('click', closeMenu);
+      document.addEventListener('keydown', function(e){ if(e.key==='Escape') closeMenu(); });
+      panel.querySelectorAll('a').forEach(function(a){ a.addEventListener('click', closeMenu); });
     }
     links.forEach(function(a){
       a.addEventListener('click', function(e){
@@ -1434,18 +1474,16 @@
       });
     });
     if('IntersectionObserver' in window){
-      if(heroEl2){
+      if(nav && heroEl2){
         new IntersectionObserver(function(entries){
-          entries.forEach(function(en){ var v = !en.isIntersecting; nav.classList.toggle('is-visible', v); document.body.classList.toggle('secnav-on', v); });
+          entries.forEach(function(en){ nav.classList.toggle('is-visible', !en.isIntersecting); });
         }, {threshold:0}).observe(heroEl2);
       }
       var spy = new IntersectionObserver(function(entries){
         entries.forEach(function(en){ if(en.isIntersecting) setActive(en.target.id); });
       }, {rootMargin:'-40% 0px -55% 0px', threshold:0});
       secs.forEach(function(s){ spy.observe(s); });
-    } else {
-      nav.classList.add('is-visible'); document.body.classList.add('secnav-on');
-    }
+    } else if(nav){ nav.classList.add('is-visible'); }
   })();
 
   if(prefersReduced){
