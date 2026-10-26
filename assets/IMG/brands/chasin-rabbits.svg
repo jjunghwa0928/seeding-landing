@@ -1,0 +1,27 @@
+<svg width="200" height="100" viewBox="0 0 200 100" xmlns="http://www.w3.org/2000/svg">
+  <rect width="200" height="100" fill="white"/>
+  <!-- Three rabbits -->
+  <g transform="translate(30,30)">
+    <ellipse cx="15" cy="25" rx="8" ry="15" stroke="#333" stroke-width="1.5" fill="none"/>
+    <ellipse cx="5" cy="10" rx="3" ry="8" stroke="#333" stroke-width="1.5" fill="none"/>
+    <ellipse cx="25" cy="10" rx="3" ry="8" stroke="#333" stroke-width="1.5" fill="none"/>
+    <circle cx="12" cy="20" r="1" fill="#333"/>
+  </g>
+  <g transform="translate(60,30)">
+    <ellipse cx="15" cy="25" rx="8" ry="15" stroke="#333" stroke-width="1.5" fill="none"/>
+    <ellipse cx="5" cy="10" rx="3" ry="8" stroke="#333" stroke-width="1.5" fill="none"/>
+    <ellipse cx="25" cy="10" rx="3" ry="8" stroke="#333" stroke-width="1.5" fill="none"/>
+    <circle cx="12" cy="20" r="1" fill="#333"/>
+  </g>
+  <g transform="translate(90,30)">
+    <ellipse cx="15" cy="25" rx="8" ry="15" stroke="#333" stroke-width="1.5" fill="none"/>
+    <ellipse cx="5" cy="10" rx="3" ry="8" stroke="#333" stroke-width="1.5" fill="none"/>
+    <ellipse cx="25" cy="10" rx="3" ry="8" stroke="#333" stroke-width="1.5" fill="none"/>
+    <circle cx="12" cy="20" r="1" fill="#333"/>
+    <circle cx="30" cy="30" r="3" fill="#00ff80"/>
+  </g>
+  <ellipse cx="100" cy="80" rx="60" ry="8" fill="#00ff80"/>
+  <text x="100" y="85" text-anchor="middle" font-family="sans-serif" font-size="10" font-weight="bold" fill="white">CHASIN' RABBITS</text>
+  <text x="40" y="20" font-family="sans-serif" font-size="8" fill="#333">CHASIN'</text>
+  <text x="130" y="20" font-family="sans-serif" font-size="8" fill="#333">RABBITS</text>
+</svg> 

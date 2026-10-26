@@ -1,0 +1,8 @@
+<svg width="200" height="100" viewBox="0 0 200 100" xmlns="http://www.w3.org/2000/svg">
+  <rect width="200" height="100" fill="white"/>
+  <text x="40" y="30" font-family="sans-serif" font-size="14" font-weight="bold" fill="#333" letter-spacing="1px">FIVE</text>
+  <text x="40" y="50" font-family="sans-serif" font-size="14" font-weight="bold" fill="#333" letter-spacing="1px">VIBE</text>
+  <rect x="120" y="35" width="20" height="3" fill="#333" rx="1.5"/>
+  <rect x="145" y="35" width="20" height="3" fill="#333" rx="1.5"/>
+  <rect x="132.5" y="45" width="20" height="3" fill="#333" rx="1.5"/>
+</svg> 

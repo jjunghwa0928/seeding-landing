@@ -1,0 +1,7 @@
+<svg width="200" height="100" viewBox="0 0 200 100" xmlns="http://www.w3.org/2000/svg">
+  <rect width="200" height="100" fill="white"/>
+  <text x="100" y="35" text-anchor="middle" font-family="serif" font-size="18" font-weight="bold" fill="#333">Dr.</text>
+  <text x="100" y="55" text-anchor="middle" font-family="serif" font-size="18" font-weight="bold" fill="#333">Choi's</text>
+  <text x="100" y="75" text-anchor="middle" font-family="serif" font-size="18" font-weight="bold" fill="#333">Solution</text>
+  <text x="100" y="90" text-anchor="middle" font-family="sans-serif" font-size="8" fill="#666">Healthy • Beauty • Wellness</text>
+</svg> 
