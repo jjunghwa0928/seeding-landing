@@ -139,21 +139,21 @@
   .secnav a:hover,.secnav a.is-active{background:var(--blue);transform:scale(1.3);}
   .secnav a span{position:absolute;right:20px;top:50%;transform:translateY(-50%);white-space:nowrap;font-size:12px;font-weight:600;color:#fff;background:var(--ink);padding:4px 10px;border-radius:999px;opacity:0;pointer-events:none;transition:opacity var(--dur-2) var(--ease);}
   .secnav a:hover span,.secnav a:focus-visible span{opacity:1;}
-  .secnav-toggle{display:none;}
   @media (max-width:1024px){
-    .secnav{display:none;}
-    .secnav-toggle{display:flex;align-items:center;gap:6px;position:fixed;right:14px;bottom:74px;z-index:61;height:40px;padding:0 14px;border-radius:999px;background:var(--ink);color:#fff;font-size:13px;font-weight:600;box-shadow:0 6px 20px rgba(0,0,0,0.22);opacity:0;pointer-events:none;transition:opacity var(--dur-3) var(--ease);}
-    .secnav-toggle.is-visible{opacity:1;pointer-events:auto;}
-    .secnav-sheet{position:fixed;left:0;right:0;bottom:0;z-index:70;background:var(--white);border-radius:18px 18px 0 0;padding:14px 16px calc(16px + env(safe-area-inset-bottom));box-shadow:0 -10px 40px rgba(0,0,0,0.18);transform:translateY(100%);transition:transform var(--dur-3) var(--ease);}
-    .secnav-sheet.is-open{transform:translateY(0);}
-    .secnav-sheet a{display:block;padding:13px 6px;border-bottom:1px solid var(--hairline);color:var(--ink);font-size:16px;font-weight:500;}
-    .secnav-sheet a:last-child{border-bottom:none;}
-    .secnav-sheet a.is-active{color:var(--blue);font-weight:600;}
-    .secnav-backdrop{position:fixed;inset:0;z-index:69;background:rgba(0,0,0,0.3);opacity:0;pointer-events:none;transition:opacity var(--dur-2) var(--ease);}
-    .secnav-backdrop.is-open{opacity:1;pointer-events:auto;}
+    :root{--secbar-h:46px;}
+    .secnav{position:fixed;left:0;right:0;top:var(--topbar-h);transform:none;z-index:55;flex-direction:row;gap:8px;
+      height:var(--secbar-h);padding:0 16px;align-items:center;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;
+      background:rgba(255,255,255,0.86);backdrop-filter:saturate(180%) blur(20px);-webkit-backdrop-filter:saturate(180%) blur(20px);border-bottom:1px solid var(--hairline);}
+    .secnav::-webkit-scrollbar{display:none;}
+    .secnav a{width:auto;height:30px;border-radius:999px;background:transparent;border:1px solid var(--hairline);padding:0 12px;display:flex;align-items:center;flex:0 0 auto;color:var(--ink-muted-80);font-size:13px;font-weight:500;transform:none;}
+    .secnav a span{position:static;transform:none;opacity:1;pointer-events:auto;background:none;color:inherit;padding:0;font-size:inherit;font-weight:inherit;}
+    .secnav a:hover,.secnav a.is-active{background:var(--ink);color:#fff;border-color:var(--ink);transform:none;}
+    .secnav-toggle,.secnav-sheet,.secnav-backdrop{display:none !important;}
+    body.secnav-on .cat-stickybar{top:calc(var(--topbar-h) + var(--secbar-h));}
+    body.secnav-on .mag-chapter{scroll-margin-top:calc(var(--topbar-h) + var(--secbar-h) + var(--catbar-h) + 8px);}
   }
-  @media (min-width:1025px){ .secnav-sheet,.secnav-backdrop{display:none;} }
-  section[id]{scroll-margin-top:calc(var(--topbar-h) + 8px);}
+  @media (min-width:1025px){ .secnav-sheet,.secnav-backdrop,.secnav-toggle{display:none;} :root{--secbar-h:0px;} }
+  section[id]{scroll-margin-top:calc(var(--topbar-h) + var(--secbar-h, 0px) + 8px);}
 
   /* ---------- HERO ---------- */
   .hero{position:relative;background:var(--ink);color:#fff;padding:120px 0 64px;overflow:hidden;}
@@ -673,19 +673,6 @@
   <a href="#brands"><span>함께한 브랜드</span></a>
   <a href="#handoff"><span>예상 실적 · 문의</span></a>
 </nav>
-<button class="secnav-toggle" id="secnavToggle" type="button" aria-controls="secnavSheet" aria-expanded="false">
-  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h10"/></svg>목차
-</button>
-<div class="secnav-backdrop" id="secnavBackdrop"></div>
-<div class="secnav-sheet" id="secnavSheet" role="dialog" aria-label="섹션 목차">
-  <a href="#gallery">리뷰 매거진</a>
-  <a href="#why">왜 시딩인가</a>
-  <a href="#market">일본 시장 경험</a>
-  <a href="#flow">진행 과정</a>
-  <a href="#how">운영 · 리포트</a>
-  <a href="#brands">함께한 브랜드</a>
-  <a href="#handoff">예상 실적 · 문의</a>
-</div>
 
 <!-- ===================== REVIEW GALLERY ===================== -->
 <section id="gallery" class="on-light">
@@ -1422,38 +1409,34 @@
     }
   }
 
-  /* Section nav: show after hero, scroll-spy active section, mobile sheet */
+  /* Section nav: show after hero, scroll-spy active section (PC dots / mobile chip bar) */
   (function(){
     var nav = document.getElementById('secnav');
-    var toggle = document.getElementById('secnavToggle');
-    var sheet = document.getElementById('secnavSheet');
-    var backdrop = document.getElementById('secnavBackdrop');
-    if(!nav || !toggle || !sheet) return;
-    var links = Array.prototype.slice.call(document.querySelectorAll('#secnav a, #secnavSheet a'));
+    if(!nav) return;
+    var links = Array.prototype.slice.call(nav.querySelectorAll('a'));
     var ids = ['gallery','why','market','flow','how','brands','handoff'];
     var secs = ids.map(function(id){ return document.getElementById(id); }).filter(Boolean);
     var heroEl2 = document.getElementById('hero');
     function setActive(id){
-      links.forEach(function(a){ a.classList.toggle('is-active', a.getAttribute('href') === '#' + id); });
+      links.forEach(function(a){
+        var on = a.getAttribute('href') === '#' + id;
+        a.classList.toggle('is-active', on);
+        if(on && window.matchMedia('(max-width:1024px)').matches && a.scrollIntoView){
+          var r=a.getBoundingClientRect(), nr=nav.getBoundingClientRect();
+          if(r.left<nr.left||r.right>nr.right) nav.scrollTo({left:a.offsetLeft-16,behavior:prefersReduced?'auto':'smooth'});
+        }
+      });
     }
-    function closeSheet(){ sheet.classList.remove('is-open'); backdrop.classList.remove('is-open'); toggle.setAttribute('aria-expanded','false'); }
-    toggle.addEventListener('click', function(){
-      var open = !sheet.classList.contains('is-open');
-      sheet.classList.toggle('is-open', open); backdrop.classList.toggle('is-open', open);
-      toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
-    });
-    backdrop.addEventListener('click', closeSheet);
     links.forEach(function(a){
       a.addEventListener('click', function(e){
         var t = document.querySelector(a.getAttribute('href'));
         if(t){ e.preventDefault(); t.scrollIntoView({behavior: prefersReduced ? 'auto' : 'smooth', block:'start'}); history.replaceState(null,'',a.getAttribute('href')); }
-        closeSheet();
       });
     });
     if('IntersectionObserver' in window){
       if(heroEl2){
         new IntersectionObserver(function(entries){
-          entries.forEach(function(en){ var v = !en.isIntersecting; nav.classList.toggle('is-visible', v); toggle.classList.toggle('is-visible', v); if(!v) closeSheet(); });
+          entries.forEach(function(en){ var v = !en.isIntersecting; nav.classList.toggle('is-visible', v); document.body.classList.toggle('secnav-on', v); });
         }, {threshold:0}).observe(heroEl2);
       }
       var spy = new IntersectionObserver(function(entries){
@@ -1461,7 +1444,7 @@
       }, {rootMargin:'-40% 0px -55% 0px', threshold:0});
       secs.forEach(function(s){ spy.observe(s); });
     } else {
-      nav.classList.add('is-visible'); toggle.classList.add('is-visible');
+      nav.classList.add('is-visible'); document.body.classList.add('secnav-on');
     }
   })();
 
