@@ -120,12 +120,12 @@
      rgba(26,27,20,0.88) on an olive ink — functionally the same near-opaque
      scrim, tuned to pure black to match this page's --ink. */
   .hero-wall{
-    position:absolute;inset:0;z-index:0;display:grid;grid-template-columns:repeat(8,1fr);gap:6px;
+    position:absolute;inset:0;z-index:0;display:grid;grid-template-columns:repeat(8,1fr);gap:3px;
     height:100%;overflow:hidden;background:var(--ink);
     -webkit-mask-image:linear-gradient(to bottom,#000 0%,#000 60%,transparent 92%);
     mask-image:linear-gradient(to bottom,#000 0%,#000 60%,transparent 92%);
   }
-  .hero-col{display:flex;flex-direction:column;gap:8px;will-change:transform;}
+  .hero-col{display:flex;flex-direction:column;gap:3px;will-change:transform;}
   .hero-col img,.hero-col video{width:100%;height:auto;aspect-ratio:3/4;flex:0 0 auto;object-fit:cover;border-radius:var(--radius-sm);background:rgba(255,255,255,0.06);}
   .hero-col-up{animation:heroDriftUp 46s linear infinite;}
   .hero-col-down{animation:heroDriftDown 52s linear infinite;}
@@ -193,10 +193,10 @@
     /* Denser 5-col wall (was 3-col) so the backdrop doesn't look sparse at
        the new taller height; mask/overlay re-tuned to the same measured
        darkness (bg mean <=45/255) since more tile area is now visible. */
-    .hero-wall{grid-template-columns:repeat(5,1fr);gap:4px;
+    .hero-wall{grid-template-columns:repeat(5,1fr);gap:2px;
       -webkit-mask-image:linear-gradient(to bottom,#000 0%,#000 78%,transparent 100%);
       mask-image:linear-gradient(to bottom,#000 0%,#000 78%,transparent 100%);}
-    .hero-col{gap:4px;}
+    .hero-col{gap:2px;}
     .hero-overlay{background:linear-gradient(to bottom,
       rgba(0,0,0,0.30) 0%,
       rgba(0,0,0,0.72) 20%,
