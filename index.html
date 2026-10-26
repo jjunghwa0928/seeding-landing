@@ -108,6 +108,53 @@
   @media (max-width:734px){ .sticky-cta{display:flex;gap:10px;} }
   .sticky-cta .btn{flex:1;height:42px;font-size:14px;padding:0 10px;}
 
+  /* ---------- Flow infographic ---------- */
+  .flow{padding-bottom:96px;}
+  .flow-track{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(5,1fr);gap:14px;position:relative;counter-reset:none;}
+  .flow-track::before{content:"";position:absolute;left:4%;right:4%;top:44px;height:2px;background:var(--hairline);z-index:0;}
+  .flow-step{position:relative;z-index:1;background:var(--parchment);border-radius:var(--radius);padding:22px 22px 26px;}
+  .flow-num{width:44px;height:44px;border-radius:50%;background:var(--ink);color:#fff;font-weight:700;font-size:14px;display:flex;align-items:center;justify-content:center;letter-spacing:0.02em;margin-bottom:18px;box-shadow:0 0 0 6px var(--white);}
+  .flow-step.is-brand .flow-num{background:var(--blue);}
+  .flow-step.is-final .flow-num{background:#1d7a3f;}
+  .flow-who{font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:0.02em;color:var(--ink-muted-48);margin-bottom:8px;}
+  .flow-step h3{font-size:18px;line-height:1.25;margin-bottom:10px;}
+  .flow-step p{margin:0;font-size:14px;line-height:1.5;color:var(--ink-muted-80);}
+  .flow-time{margin-top:14px;display:inline-block;font-size:12px;font-weight:600;color:var(--ink);background:var(--white);border:1px solid var(--hairline);border-radius:999px;padding:4px 10px;}
+  .flow-legend{text-align:center;margin:28px 0 0;font-size:13px;color:var(--ink-muted-56);display:flex;justify-content:center;gap:18px;align-items:center;}
+  .flow-dot{display:inline-block;width:10px;height:10px;border-radius:50%;background:var(--ink);margin-right:6px;vertical-align:middle;}
+  .flow-dot.is-brand{background:var(--blue);}
+  @media (max-width:1024px){
+    .flow-track{grid-template-columns:1fr;gap:0;padding-left:30px;}
+    .flow-track::before{left:21px;right:auto;top:0;bottom:0;width:2px;height:auto;}
+    .flow-step{padding:0 0 26px 26px;background:none;border-radius:0;}
+    .flow-num{position:absolute;left:-30px;top:0;width:36px;height:36px;font-size:12px;margin:0;}
+    .flow-step .flow-who{padding-top:8px;}
+    .flow-legend{flex-wrap:wrap;gap:12px;}
+  }
+
+  /* ---------- Section nav (PC side dots / mobile TOC) ---------- */
+  .secnav{position:fixed;right:18px;top:50%;transform:translateY(-50%);z-index:55;display:flex;flex-direction:column;gap:10px;opacity:0;pointer-events:none;transition:opacity var(--dur-3) var(--ease);}
+  .secnav.is-visible{opacity:1;pointer-events:auto;}
+  .secnav a{position:relative;width:10px;height:10px;border-radius:50%;background:rgba(29,29,31,0.28);display:block;transition:background var(--dur-2) var(--ease),transform var(--dur-2) var(--ease);}
+  .secnav a:hover,.secnav a.is-active{background:var(--blue);transform:scale(1.3);}
+  .secnav a span{position:absolute;right:20px;top:50%;transform:translateY(-50%);white-space:nowrap;font-size:12px;font-weight:600;color:#fff;background:var(--ink);padding:4px 10px;border-radius:999px;opacity:0;pointer-events:none;transition:opacity var(--dur-2) var(--ease);}
+  .secnav a:hover span,.secnav a:focus-visible span{opacity:1;}
+  .secnav-toggle{display:none;}
+  @media (max-width:1024px){
+    .secnav{display:none;}
+    .secnav-toggle{display:flex;align-items:center;gap:6px;position:fixed;right:14px;bottom:74px;z-index:61;height:40px;padding:0 14px;border-radius:999px;background:var(--ink);color:#fff;font-size:13px;font-weight:600;box-shadow:0 6px 20px rgba(0,0,0,0.22);opacity:0;pointer-events:none;transition:opacity var(--dur-3) var(--ease);}
+    .secnav-toggle.is-visible{opacity:1;pointer-events:auto;}
+    .secnav-sheet{position:fixed;left:0;right:0;bottom:0;z-index:70;background:var(--white);border-radius:18px 18px 0 0;padding:14px 16px calc(16px + env(safe-area-inset-bottom));box-shadow:0 -10px 40px rgba(0,0,0,0.18);transform:translateY(100%);transition:transform var(--dur-3) var(--ease);}
+    .secnav-sheet.is-open{transform:translateY(0);}
+    .secnav-sheet a{display:block;padding:13px 6px;border-bottom:1px solid var(--hairline);color:var(--ink);font-size:16px;font-weight:500;}
+    .secnav-sheet a:last-child{border-bottom:none;}
+    .secnav-sheet a.is-active{color:var(--blue);font-weight:600;}
+    .secnav-backdrop{position:fixed;inset:0;z-index:69;background:rgba(0,0,0,0.3);opacity:0;pointer-events:none;transition:opacity var(--dur-2) var(--ease);}
+    .secnav-backdrop.is-open{opacity:1;pointer-events:auto;}
+  }
+  @media (min-width:1025px){ .secnav-sheet,.secnav-backdrop{display:none;} }
+  section[id]{scroll-margin-top:calc(var(--topbar-h) + 8px);}
+
   /* ---------- HERO ---------- */
   .hero{position:relative;background:var(--ink);color:#fff;padding:120px 0 64px;overflow:hidden;}
   /* Drifting review-wall backdrop, ported from v5-main.html's .hero-wall.
@@ -616,6 +663,30 @@
   <a class="btn btn-blue" href="https://pf.kakao.com/_TyEtn/chat" target="_blank" rel="noopener">카카오톡 문의</a>
 </div>
 
+<!-- ===================== SECTION NAV ===================== -->
+<nav class="secnav" id="secnav" aria-label="섹션 이동">
+  <a href="#gallery"><span>리뷰 매거진</span></a>
+  <a href="#why"><span>왜 시딩인가</span></a>
+  <a href="#market"><span>일본 시장 경험</span></a>
+  <a href="#flow"><span>진행 과정</span></a>
+  <a href="#how"><span>운영 · 리포트</span></a>
+  <a href="#brands"><span>함께한 브랜드</span></a>
+  <a href="#handoff"><span>예상 실적 · 문의</span></a>
+</nav>
+<button class="secnav-toggle" id="secnavToggle" type="button" aria-controls="secnavSheet" aria-expanded="false">
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h10"/></svg>목차
+</button>
+<div class="secnav-backdrop" id="secnavBackdrop"></div>
+<div class="secnav-sheet" id="secnavSheet" role="dialog" aria-label="섹션 목차">
+  <a href="#gallery">리뷰 매거진</a>
+  <a href="#why">왜 시딩인가</a>
+  <a href="#market">일본 시장 경험</a>
+  <a href="#flow">진행 과정</a>
+  <a href="#how">운영 · 리포트</a>
+  <a href="#brands">함께한 브랜드</a>
+  <a href="#handoff">예상 실적 · 문의</a>
+</div>
+
 <!-- ===================== REVIEW GALLERY ===================== -->
 <section id="gallery" class="on-light">
   <div class="wrap sec-head eyebrow-free reveal">
@@ -1008,6 +1079,54 @@
   </div>
 </section>
 
+<!-- ===================== FLOW (계약 → 리포트 인포그래픽) ===================== -->
+<section class="on-light flow" id="flow">
+  <div class="wrap sec-head eyebrow-free reveal">
+    <h2 class="headline-sm">계약부터 리포트까지, 이렇게 진행됩니다</h2>
+    <p class="subhead">평균 6~8주. 브랜드가 직접 하는 일은 1단계와 3단계뿐입니다.</p>
+  </div>
+  <div class="wrap-wide">
+    <ol class="flow-track reveal">
+      <li class="flow-step is-brand">
+        <div class="flow-num">01</div>
+        <div class="flow-who">브랜드</div>
+        <h3>계약 · 목표 설정</h3>
+        <p>카테고리, 인원, 목표(인지·판매·UGC 확보)를 정하고 견적을 확정합니다.</p>
+        <div class="flow-time">1주</div>
+      </li>
+      <li class="flow-step">
+        <div class="flow-num">02</div>
+        <div class="flow-who">엔클루 · WEEDY</div>
+        <h3>크리에이터 모집 · 선정</h3>
+        <p>WEEDY에 캠페인을 올리면 일본 크리에이터가 직접 지원합니다. 실적 데이터로 선별합니다.</p>
+        <div class="flow-time">1~2주</div>
+      </li>
+      <li class="flow-step is-brand">
+        <div class="flow-num">03</div>
+        <div class="flow-who">브랜드 → 엔클루</div>
+        <h3>제품 발송</h3>
+        <p>제품을 일본 법인으로 한 번만 보내주시면, 개별 배송과 안내는 저희가 합니다.</p>
+        <div class="flow-time">1주</div>
+      </li>
+      <li class="flow-step">
+        <div class="flow-num">04</div>
+        <div class="flow-who">크리에이터</div>
+        <h3>체험 · 게시</h3>
+        <p>인스타그램·릴스·TikTok에 리뷰가 올라갑니다. 게시물은 하나씩 확인해 회수합니다.</p>
+        <div class="flow-time">2~3주</div>
+      </li>
+      <li class="flow-step is-final">
+        <div class="flow-num">05</div>
+        <div class="flow-who">엔클루</div>
+        <h3>성과 리포트</h3>
+        <p>투고율, 참여율 분포, 언급 키워드, 2차 활용 가능한 게시물 링크까지 정리해 드립니다.</p>
+        <div class="flow-time">종료 후 1주</div>
+      </li>
+    </ol>
+    <p class="flow-legend reveal"><span class="flow-dot is-brand"></span>브랜드가 하는 일 <span class="flow-dot"></span>엔클루가 하는 일</p>
+  </div>
+</section>
+
 <!-- ===================== PROCESS + WEEDY + REPORT ===================== -->
 <section class="on-light" id="how">
   <div class="wrap sec-head eyebrow-free reveal">
@@ -1302,6 +1421,49 @@
       io.observe(heroEl);
     }
   }
+
+  /* Section nav: show after hero, scroll-spy active section, mobile sheet */
+  (function(){
+    var nav = document.getElementById('secnav');
+    var toggle = document.getElementById('secnavToggle');
+    var sheet = document.getElementById('secnavSheet');
+    var backdrop = document.getElementById('secnavBackdrop');
+    if(!nav || !toggle || !sheet) return;
+    var links = Array.prototype.slice.call(document.querySelectorAll('#secnav a, #secnavSheet a'));
+    var ids = ['gallery','why','market','flow','how','brands','handoff'];
+    var secs = ids.map(function(id){ return document.getElementById(id); }).filter(Boolean);
+    var heroEl2 = document.getElementById('hero');
+    function setActive(id){
+      links.forEach(function(a){ a.classList.toggle('is-active', a.getAttribute('href') === '#' + id); });
+    }
+    function closeSheet(){ sheet.classList.remove('is-open'); backdrop.classList.remove('is-open'); toggle.setAttribute('aria-expanded','false'); }
+    toggle.addEventListener('click', function(){
+      var open = !sheet.classList.contains('is-open');
+      sheet.classList.toggle('is-open', open); backdrop.classList.toggle('is-open', open);
+      toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+    });
+    backdrop.addEventListener('click', closeSheet);
+    links.forEach(function(a){
+      a.addEventListener('click', function(e){
+        var t = document.querySelector(a.getAttribute('href'));
+        if(t){ e.preventDefault(); t.scrollIntoView({behavior: prefersReduced ? 'auto' : 'smooth', block:'start'}); history.replaceState(null,'',a.getAttribute('href')); }
+        closeSheet();
+      });
+    });
+    if('IntersectionObserver' in window){
+      if(heroEl2){
+        new IntersectionObserver(function(entries){
+          entries.forEach(function(en){ var v = !en.isIntersecting; nav.classList.toggle('is-visible', v); toggle.classList.toggle('is-visible', v); if(!v) closeSheet(); });
+        }, {threshold:0}).observe(heroEl2);
+      }
+      var spy = new IntersectionObserver(function(entries){
+        entries.forEach(function(en){ if(en.isIntersecting) setActive(en.target.id); });
+      }, {rootMargin:'-40% 0px -55% 0px', threshold:0});
+      secs.forEach(function(s){ spy.observe(s); });
+    } else {
+      nav.classList.add('is-visible'); toggle.classList.add('is-visible');
+    }
+  })();
 
   if(prefersReduced){
     document.querySelectorAll('video[autoplay]').forEach(function(v){
