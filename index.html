@@ -419,6 +419,12 @@
   }
   .hero-credential img{height:26px;width:auto;display:block;flex-shrink:0;border-radius:3px;background:#fff;padding:1px 3px;}
   .hero .hero-ctas{margin-top:34px;}
+  /* PC: wall layer is 150% wide and centred so each tile reads ~1.5x larger
+     (user: "PC 버전 히어로 섹션 백그라운드 가로 크기 50% 정도 늘려줘").
+     .hero has overflow:hidden, so the overhang is clipped, not scrolled. */
+  @media (min-width:1025px){
+    .hero-wall{width:150%;left:-25%;right:auto;}
+  }
   @media (max-width:1024px){
     .hero-wall{grid-template-columns:repeat(4,1fr);}
   }
