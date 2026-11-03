@@ -1,0 +1,79 @@
+/* 견적 문의 모달 (assets/quote-form.js). index.html과 tool.html의 :root 변수를 그대로 사용합니다. */
+html.qf-lock{overflow:hidden;}
+
+.qf-dialog{
+  border:none;padding:0;margin:auto;overflow:hidden;
+  width:min(560px,calc(100vw - 32px));max-width:none;
+  max-height:calc(100vh - 48px);max-height:calc(100dvh - 48px);
+  background:var(--white);color:var(--ink);border-radius:var(--radius);
+  box-shadow:0 24px 64px rgba(0,0,0,0.28);
+}
+.qf-dialog[open]{display:flex;flex-direction:column;animation:qfFade var(--dur-2) var(--ease);}
+.qf-dialog::backdrop{background:rgba(0,0,0,0.56);}
+@keyframes qfFade{from{opacity:0;}to{opacity:1;}}
+@media (prefers-reduced-motion:reduce){ .qf-dialog[open]{animation:none;} }
+
+.qf-close{
+  position:absolute;top:14px;right:14px;z-index:1;width:40px;height:40px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;color:var(--ink-muted-80);background:var(--parchment);
+  transition:color var(--dur-2) var(--ease);
+}
+.qf-close:hover{color:var(--ink);}
+.qf-close svg{width:18px;height:18px;}
+
+.qf-scroll{flex:1 1 auto;min-height:0;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;padding:32px;}
+.qf-title{font-size:24px;line-height:1.25;padding-right:44px;outline:none;}
+.qf-lead{margin:8px 0 24px;font-size:14px;line-height:1.5;color:var(--ink-muted-80);}
+
+.qf-field{margin-bottom:18px;}
+.qf-label{display:block;font-size:14px;font-weight:600;color:var(--ink);margin-bottom:8px;}
+.qf-req{color:#d70015;margin-left:2px;}
+.qf-opt{font-size:12px;font-weight:400;color:var(--ink-muted-56);margin-left:4px;}
+.qf-input{
+  display:block;width:100%;font-size:16px;font-family:inherit;color:var(--ink);background:var(--white);
+  border:1px solid rgba(0,0,0,0.24);border-radius:var(--radius-sm);padding:12px 14px;
+  transition:border-color var(--dur-2) var(--ease);
+}
+.qf-input::placeholder{color:var(--ink-muted-48);}
+.qf-input:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 1px var(--blue);}
+.qf-input[aria-invalid="true"]{border-color:#d70015;}
+select.qf-input{
+  appearance:none;-webkit-appearance:none;padding-right:40px;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%231d1d1f' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right 14px center;background-size:16px;
+}
+textarea.qf-input{resize:vertical;min-height:96px;}
+.qf-error{margin:6px 0 0;font-size:13px;line-height:1.4;color:#d70015;}
+.qf-error:empty{display:none;}
+
+.qf-consent{display:flex;align-items:flex-start;gap:10px;font-size:14px;line-height:1.45;color:var(--ink);cursor:pointer;}
+.qf-consent input{width:18px;height:18px;margin:1px 0 0;flex-shrink:0;accent-color:var(--blue);}
+.qf-notice{margin-top:8px;padding-left:28px;font-size:13px;color:var(--ink-muted-80);}
+.qf-notice summary{cursor:pointer;width:max-content;max-width:100%;padding:4px 0;text-decoration:underline;text-underline-offset:2px;}
+.qf-notice ul{list-style:none;margin:6px 0 0;padding:12px 14px;background:var(--parchment);border-radius:var(--radius-sm);line-height:1.5;}
+.qf-notice li + li{margin-top:4px;}
+.qf-notice b{font-weight:600;color:var(--ink);margin-right:4px;}
+
+.qf-submit.btn{width:100%;height:50px;margin-top:8px;}
+.qf-submit.btn:disabled{opacity:0.5;cursor:not-allowed;}
+.qf-status{margin:12px 0 0;font-size:14px;text-align:center;color:#d70015;}
+.qf-status:empty{display:none;}
+
+.qf-success{text-align:center;padding:24px 0 8px;}
+.qf-success[hidden],.qf-form[hidden]{display:none;}
+.qf-success-icon{width:56px;height:56px;margin:0 auto 18px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:var(--blue);color:#fff;}
+.qf-success-icon svg{width:26px;height:26px;}
+.qf-success .qf-title{padding-right:0;}
+.qf-success p{margin:12px 0 0;font-size:15px;line-height:1.55;color:var(--ink-muted-80);}
+.qf-success a{color:var(--blue);}
+.qf-success .btn{width:100%;height:50px;margin-top:24px;}
+
+/* 600px 미만: 전체 화면 시트 */
+@media (max-width:599px){
+  .qf-dialog{
+    width:100%;height:100vh;height:100dvh;max-height:none;margin:0;border-radius:0;
+  }
+  .qf-scroll{padding:24px 18px calc(24px + env(safe-area-inset-bottom));}
+  .qf-close{top:12px;right:12px;}
+  .qf-title{font-size:22px;}
+}

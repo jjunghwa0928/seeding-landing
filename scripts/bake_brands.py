@@ -24,12 +24,10 @@ WALL_RE = re.compile(r"<!-- brands:wall -->.*?<!-- /brands:wall -->", re.S)
 # Source file names (no extension) shown in original colors, because the white
 # filter flattens them into an unreadable shape.
 KEEP_COLOR = {"7_CHASIN'RABBITS", "59_Maeil"}
-# Comments can't sit inside attribute values, so the meta tags and the stat's
-# data attribute are matched by their surrounding text instead of by markers.
+# Comments can't sit inside attribute values, so the meta tags are matched by
+# their surrounding text instead of by markers.
 COUNT_SUBS = [
-    (re.compile(r"(<!-- brands:count -->)\d+(<!-- /brands:count -->)"), 2),
     (re.compile(r"(K-뷰티 )\d+(개 브랜드의)"), 3),
-    (re.compile(r'(data-seed-num=")\d+(개" data-ads-text="브랜드별 개별 집행")'), 1),
 ]
 SVG_SIZE_RE = re.compile(r'viewBox="\s*[-\d.]+[\s,]+[-\d.]+[\s,]+([\d.]+)[\s,]+([\d.]+)\s*"')
 MAX_H, MAX_W = 160, 480  # never upscaled; 3x the largest size the chips display

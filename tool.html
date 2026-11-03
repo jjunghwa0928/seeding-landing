@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>ENCLU — 예상 실적 확인 | K-뷰티 인플루언서 시딩 예상 도달·참여 계산</title>
-<meta name="description" content="카테고리·인원·목표를 선택하면 K-뷰티 인플루언서 시딩의 예상 도달·참여가 바로 나옵니다. 수출바우처 적용 여부도 선택할 수 있습니다. 예상 비용과 세부 성과는 견적 문의로 안내합니다.">
+<meta name="description" content="카테고리·인원·목표를 선택하면 K-뷰티 인플루언서 시딩의 예상 도달·참여가 바로 나옵니다. 수출바우처 적용 여부도 선택할 수 있습니다. 예상 비용과 세부 성과는 업체명·브랜드명, 연락처, 이메일, 희망 진행 수량만 남기는 간단한 견적 문의로 안내합니다.">
 <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1">
 <meta name="theme-color" content="#ffffff">
 <link rel="canonical" href="https://jjunghwa0928.github.io/seeding-landing/tool.html">
@@ -30,7 +30,7 @@
   "@id": "https://jjunghwa0928.github.io/seeding-landing/tool.html#webpage",
   "url": "https://jjunghwa0928.github.io/seeding-landing/tool.html",
   "name": "ENCLU — 예상 실적 확인",
-  "description": "카테고리·인원·목표를 선택하면 K-뷰티 인플루언서 시딩의 예상 도달·참여가 바로 나옵니다. 수출바우처 적용 여부도 선택할 수 있습니다. 예상 비용과 세부 성과는 견적 문의로 안내합니다.",
+  "description": "카테고리·인원·목표를 선택하면 K-뷰티 인플루언서 시딩의 예상 도달·참여가 바로 나옵니다. 수출바우처 적용 여부도 선택할 수 있습니다. 예상 비용과 세부 성과는 업체명·브랜드명, 연락처, 이메일, 희망 진행 수량만 남기는 간단한 견적 문의로 안내합니다.",
   "inLanguage": "ko",
   "isPartOf": {"@id": "https://jjunghwa0928.github.io/seeding-landing/#website"},
   "about": {"@id": "https://jjunghwa0928.github.io/seeding-landing/#service"},
@@ -51,8 +51,8 @@
   "operatingSystem": "Web",
   "browserRequirements": "Requires JavaScript",
   "inLanguage": "ko",
-  "description": "카테고리, 인플루언서 인원, 캠페인 목표, 수출바우처 적용 여부를 선택하면 AI 예측 데이터(게시 후 30일 기준)로 예상 도달과 예상 참여를 바로 보여줍니다. 예상 비용 범위, 예상 게시물 수, 저장·공유, 프로필 방문, 링크 클릭, 콘텐츠 확보 수는 견적 문의 후 공개됩니다. 실제 성과는 제품·시기·인플루언서 반응에 따라 다릅니다.",
-  "featureList": ["카테고리 선택", "인플루언서 인원 선택", "캠페인 목표 선택", "수출바우처 적용 토글", "예상 도달 · 예상 참여 즉시 계산", "선택한 조건으로 견적 문의"],
+  "description": "카테고리, 인플루언서 인원, 캠페인 목표, 수출바우처 적용 여부를 선택하면 AI 예측 데이터(게시 후 30일 기준)로 예상 도달과 예상 참여를 바로 보여줍니다. 예상 비용 범위, 예상 게시물 수, 저장·공유, 프로필 방문, 링크 클릭, 콘텐츠 확보 수는 견적 문의 후 공개됩니다. 견적 문의에는 업체명·브랜드명, 연락처, 이메일, 희망 진행 수량이 필요하고 문의 내용은 선택 입력이며, 계산기에서 선택한 조건이 함께 전달됩니다. 실제 성과는 제품·시기·인플루언서 반응에 따라 다릅니다.",
+  "featureList": ["카테고리 선택", "인플루언서 인원 선택", "캠페인 목표 선택", "수출바우처 적용 토글", "예상 도달 · 예상 참여 즉시 계산", "간단한 견적 문의(업체명·브랜드명, 연락처, 이메일, 희망 진행 수량, 문의 내용)", "선택한 계산기 조건 자동 첨부"],
   "provider": {"@id": "https://jjunghwa0928.github.io/seeding-landing/#organization"},
   "isPartOf": {"@id": "https://jjunghwa0928.github.io/seeding-landing/#website"}
 }
@@ -191,6 +191,7 @@
   }
   .voucher-text{font-size:13px;color:var(--ink-muted-80);max-width:56ch;}
   .voucher-text strong{color:var(--ink);}
+  .voucher-note{display:block;margin-top:6px;font-size:12px;color:var(--ink-muted-56);}
   .switch-label{display:flex;align-items:center;gap:10px;font-size:14px;font-weight:600;color:var(--ink);flex-shrink:0;}
   .switch{position:relative;width:46px;height:26px;flex-shrink:0;}
   .switch input{position:absolute;opacity:0;width:100%;height:100%;margin:0;cursor:pointer;}
@@ -292,21 +293,6 @@
     .seg-opt{font-size:13px;padding:8px 10px;}
   }
 
-  /* ---------- Chip multiselect ---------- */
-  .chip-group{display:flex;flex-wrap:wrap;gap:8px;}
-  .chip{border:1px solid var(--hairline);background:var(--white);color:var(--ink-muted-80);padding:8px 16px;border-radius:980px;font-size:14px;font-weight:500;transition:background var(--dur-2) var(--ease),color var(--dur-2) var(--ease),border-color var(--dur-2) var(--ease);}
-  .chip[aria-pressed="true"]{background:var(--ink);color:#fff;border-color:var(--ink);}
-  .chip:hover:not([aria-pressed="true"]){border-color:var(--ink);}
-
-  /* ---------- Form groups ---------- */
-  .form-group-title{font-size:15px;font-weight:600;color:var(--ink);margin:0 0 16px;padding-top:28px;border-top:1px solid var(--hairline);}
-  .form-group-title:first-child{padding-top:0;border-top:none;}
-  .field-select{width:100%;font-size:16px;font-family:inherit;color:var(--ink);background:var(--white);border:1px solid var(--hairline);border-radius:var(--radius-sm);padding:12px 14px;appearance:none;}
-  .field-select:focus{outline:none;border-color:var(--blue);}
-  .field-select.has-error{border-color:#ff3b30;}
-  .consent-row{display:flex;align-items:flex-start;gap:10px;font-size:14px;color:var(--ink);}
-  .consent-row input{margin-top:3px;width:18px;height:18px;flex-shrink:0;}
-
   /* ---------- Sticky mobile bottom CTA ---------- */
   .sticky-cta{display:none;}
   @media (max-width:734px){
@@ -318,42 +304,6 @@
     }
     .sticky-cta .btn{width:100%;}
     body{padding-bottom:78px;}
-  }
-
-  /* ---------- Consult form ---------- */
-  .consult-section{display:none;}
-  .consult-section.is-open{display:block;}
-  .summary-card{background:var(--white);border:1px solid var(--hairline);border-radius:var(--radius-sm);padding:22px 24px;margin:0 auto 28px;max-width:640px;}
-  .summary-card-title{font-size:13px;font-weight:600;color:var(--ink-muted-56);text-transform:uppercase;letter-spacing:0.04em;margin-bottom:12px;}
-  .summary-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px 20px;}
-  .summary-item{font-size:14px;color:var(--ink-muted-80);display:flex;justify-content:space-between;gap:8px;}
-  .summary-item strong{color:var(--ink);font-weight:600;}
-  @media (max-width:520px){ .summary-grid{grid-template-columns:1fr;} }
-
-  .consult-form{max-width:640px;margin:0 auto;background:var(--white);border:1px solid var(--hairline);border-radius:var(--radius);padding:32px;}
-  .field-row{margin-bottom:20px;}
-  .field-row:last-child{margin-bottom:0;}
-  .field-label{display:block;font-size:14px;font-weight:600;color:var(--ink);margin-bottom:8px;}
-  .field-label .req{color:#ff3b30;margin-left:2px;}
-  .field-input{width:100%;font-size:16px;font-family:inherit;color:var(--ink);background:var(--white);border:1px solid var(--hairline);border-radius:var(--radius-sm);padding:12px 14px;transition:border-color var(--dur-2) var(--ease);}
-  .field-input:focus{outline:none;border-color:var(--blue);}
-  .field-input.has-error{border-color:#ff3b30;}
-  textarea.field-input{resize:vertical;min-height:88px;font-family:inherit;}
-  .field-error{font-size:12px;color:#ff3b30;margin-top:6px;display:none;}
-  .field-error.is-visible{display:block;}
-  .form-actions{margin-top:28px;display:flex;gap:14px;flex-wrap:wrap;}
-  .form-actions .btn{flex:1;min-width:160px;}
-  .form-status{font-size:14px;margin-top:16px;text-align:center;display:none;}
-  .form-status.is-visible{display:block;}
-  .form-status.ok{color:#1d7d3a;}
-  .form-status.err{color:#ff3b30;}
-  .success-box{background:var(--parchment);border-radius:var(--radius-sm);padding:28px 24px;text-align:center;}
-  .success-box .ok-icon{font-size:32px;margin-bottom:10px;}
-  .success-box p{font-size:15px;color:var(--ink-muted-80);margin:0;}
-  @media (max-width:734px){
-    .consult-form{padding:22px;}
-    .form-actions{flex-direction:column;}
-    .form-actions .btn{width:100%;}
   }
 
   /* ---------- Footer (identical to v6-apple.html) ---------- */
@@ -391,6 +341,7 @@
     .results-panel .ai-tag-wrap{margin-bottom:10px;}
   }
 </style>
+<link rel="stylesheet" href="assets/quote-form.css">
 </head>
 <body>
 
@@ -437,7 +388,7 @@
           <div class="planner-row" style="margin-bottom:0;">
             <div class="planner-label">수출바우처 적용</div>
             <div class="voucher-row">
-              <div class="voucher-text">엔클루는 <strong>수출바우처 공식 수행기관</strong>입니다. 적용하면 비용 부담이 낮아집니다.</div>
+              <div class="voucher-text">엔클루는 <strong>수출바우처 공식 수행기관</strong>입니다. 적용하면 비용 부담이 낮아집니다.<span class="voucher-note">※ 실제 지원 및 정산 가능 여부는 해당 사업의 운영 지침과 심사 기준에 따라 달라질 수 있습니다.</span></div>
               <label class="switch-label" for="voucher-toggle">
                 <span class="switch">
                   <input type="checkbox" id="voucher-toggle">
@@ -504,39 +455,6 @@
             <button type="button" class="btn btn-blue" id="btn-open-consult" data-open-consult>견적 문의 하기</button>
             <a class="btn btn-outline" href="https://pf.kakao.com/_TyEtn/chat" target="_blank" rel="noopener">카카오톡 문의</a>
           </div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-
-  <!-- ===================== CONSULT REQUEST FORM ===================== -->
-  <section class="on-light consult-section" id="consult">
-    <div class="wrap sec-head reveal">
-      <h2 class="headline-sm">선택한 조건으로 상담 요청</h2>
-      <p class="subhead">아래 정보를 보내주시면 담당 팀이 확인 후 연락드립니다.</p>
-    </div>
-    <div class="wrap">
-      <div class="summary-card reveal">
-        <div class="summary-card-title">보내는 내용</div>
-        <div class="summary-grid" id="summary-grid"></div>
-      </div>
-
-      <div id="consult-form-wrap" class="reveal">
-        <form class="consult-form" id="consult-form" novalidate>
-          <div id="fields-mount"></div>
-          <div class="form-actions">
-            <button type="submit" class="btn btn-blue" id="btn-submit-consult">견적 문의 하기</button>
-            <a class="btn btn-outline" href="https://pf.kakao.com/_TyEtn/chat" target="_blank" rel="noopener">카카오톡 문의</a>
-          </div>
-          <p class="form-status" id="form-status"></p>
-        </form>
-      </div>
-
-      <div id="consult-success" class="success-card" style="display:none;max-width:640px;margin:0 auto;">
-        <div class="success-box reveal">
-          <div class="ok-icon">✓</div>
-          <p>요청이 전달되었습니다. 담당 팀이 확인 후 연락드립니다.</p>
         </div>
       </div>
     </div>
@@ -771,15 +689,11 @@
     el._raf = requestAnimationFrame(step);
   }
 
-  var lastResult = null;
-
   function render(){
     var r = compute();
     setStatSoft(document.getElementById("out-reach"), fmt(r.reachLow) + "명", " 이상");
     setStatSoft(document.getElementById("out-engagement"), fmt(r.engLow) + "회", " 이상");
     document.getElementById("voucher-state-label").textContent = state.voucher ? "적용됨" : "미적용";
-    lastResult = r;
-    renderSummary();
     return r;
   }
 
@@ -792,7 +706,7 @@
       { value:"food", label:"식품" }
     ],
     value: state.category,
-    onChange: function(v){ state.category = v; render(); syncFormPrefill(); }
+    onChange: function(v){ state.category = v; render(); }
   });
   document.getElementById("seg-category").appendChild(segCategory.el);
 
@@ -804,7 +718,7 @@
       { value:"large", label:"21–40명" }
     ],
     value: state.size,
-    onChange: function(v){ state.size = v; render(); syncFormPrefill(); }
+    onChange: function(v){ state.size = v; render(); }
   });
   document.getElementById("seg-size").appendChild(segSize.el);
 
@@ -816,444 +730,26 @@
       { value:"conversion", label:"매출 전환" }
     ],
     value: state.goal,
-    onChange: function(v){ state.goal = v; render(); syncFormPrefill(); }
+    onChange: function(v){ state.goal = v; render(); }
   });
   document.getElementById("seg-goal").appendChild(segGoal.el);
 
   document.getElementById("voucher-toggle").addEventListener("change", function(e){
     state.voucher = e.target.checked;
     render();
-    syncFormPrefill();
   });
 
-  // ==================================================================
-  // CONSULT REQUEST FORM
-  //
-  // SUBMIT ENDPOINT HOOK:
-  // Set SUBMIT_ENDPOINT below to a real URL to POST the JSON payload
-  // there (fetch, method POST, JSON body). When left as '', the form
-  // falls back to opening a prefilled mailto: to mkt2@enclu.co.kr with
-  // the payload written out as readable Korean lines in the body.
-  // ==================================================================
-  var SUBMIT_ENDPOINT = '';
-  var CONSULT_EMAIL = 'mkt2@enclu.co.kr';
-
-  // FIELDS drives both rendering and the payload — add new fields here only.
-  // group marks a new form-group-title heading; type: text|email|tel|url|select|segmented|multiselect|textarea|checkbox
-  var FIELDS = [
-    { key:"company",    label:"업체명",             type:"text",      required:true,  group:"회사 정보", placeholder:"예) 엔클루" },
-    { key:"brand",       label:"브랜드명",           type:"text",      required:false, placeholder:"예) OOO코스메틱" },
-    { key:"companyUrl",  label:"회사 웹사이트 URL",   type:"url",       required:false, placeholder:"예) https://..." },
-    { key:"name",        label:"담당자명",           type:"text",      required:true,  placeholder:"예) 홍길동" },
-    { key:"title",       label:"직함/부서",          type:"text",      required:false, placeholder:"예) 마케팅팀 매니저" },
-    { key:"email",       label:"이메일",             type:"email",     required:true,  placeholder:"예) name@company.com" },
-    { key:"phone",       label:"연락처",             type:"tel",       required:false, placeholder:"예) 010-0000-0000" },
-
-    { key:"category",    label:"카테고리",           type:"segmented", required:true,  group:"제품 정보",
-      options:[{value:"skincare",label:"스킨케어"},{value:"color",label:"색조"},{value:"body",label:"바디"},{value:"food",label:"식품"}],
-      prefillFromState:"category" },
-    { key:"productType",label:"상품 종류",           type:"select",    required:true,
-      options:["에센스/세럼","크림","클렌저","마스크팩","선케어","토너","립","아이","베이스","바디케어","헤어","스낵/간식","음료","건강식품","기타"] },
-    { key:"productUrl",  label:"제품명/URL",         type:"text",      required:false, placeholder:"예) 제품명 또는 URL" },
-    { key:"priceRange",  label:"소비자 가격대",       type:"segmented", required:false,
-      options:[{value:"u1500",label:"~¥1,500"},{value:"1500-3000",label:"¥1,500–3,000"},{value:"3000-5000",label:"¥3,000–5,000"},{value:"o5000",label:"¥5,000+"}] },
-    { key:"seedQty",     label:"제품 수량(시딩 가능)", type:"segmented", required:false,
-      options:[{value:"u10",label:"10개 이하"},{value:"11-30",label:"11–30"},{value:"31-50",label:"31–50"},{value:"o51",label:"51+"}] },
-    { key:"jpSales",     label:"일본 판매 여부",       type:"segmented", required:false,
-      options:[{value:"selling",label:"판매 중"},{value:"prep",label:"준비 중"},{value:"undecided",label:"미정"}] },
-    { key:"channels",    label:"판매 채널",           type:"multiselect", required:false,
-      options:["Qoo10","Amazon JP","라쿠텐","자사몰","오프라인","기타"] },
-
-    { key:"size",        label:"인플루언서 인원",      type:"segmented", required:true,  group:"캠페인 조건",
-      options:[{value:"small",label:"5–10명"},{value:"mid",label:"11–20명"},{value:"large",label:"21–40명"}],
-      prefillFromState:"size" },
-    { key:"followerRange",label:"희망 팔로워 규모",    type:"segmented", required:false,
-      options:[{value:"1k-1w",label:"1천–1만"},{value:"1w-5w",label:"1만–5만"},{value:"5w-10w",label:"5만–10만"},{value:"o10w",label:"10만+"}] },
-    { key:"platforms",   label:"플랫폼",             type:"multiselect", required:false,
-      options:["Instagram","TikTok","YouTube","X"] },
-    { key:"contentType", label:"콘텐츠 형태",         type:"multiselect", required:false,
-      options:["피드 사진","릴스/쇼츠","스토리","리뷰 글"] },
-    { key:"goal",        label:"캠페인 목표",         type:"segmented", required:true,
-      options:[{value:"awareness",label:"인지도 확대"},{value:"asset",label:"리뷰 자산 확보"},{value:"conversion",label:"매출 전환"}],
-      prefillFromState:"goal" },
-    { key:"startTiming", label:"희망 시작 시기",       type:"segmented", required:false,
-      options:[{value:"m1",label:"1개월 내"},{value:"m1-3",label:"1–3개월"},{value:"m3plus",label:"3개월+"},{value:"undecided",label:"미정"}] },
-    { key:"budgetRange", label:"예산 범위",           type:"segmented", required:false,
-      options:[{value:"u300",label:"300만원 이하"},{value:"300-500",label:"300–500"},{value:"500-1000",label:"500–1,000"},{value:"o1000",label:"1,000만원+"},{value:"undecided",label:"미정"}] },
-    { key:"voucherField",label:"수출바우처",          type:"segmented", required:false,
-      options:[{value:"have",label:"보유"},{value:"applying",label:"신청 예정"},{value:"none",label:"없음"}],
-      prefillFromState:"voucher" },
-    { key:"experience",  label:"기존 인플루언서 마케팅 경험", type:"segmented", required:false,
-      options:[{value:"none",label:"없음"},{value:"domestic",label:"국내만"},{value:"global",label:"해외 경험 있음"}] },
-
-    { key:"memo",        label:"전달 사항",           type:"textarea",  required:false, group:"기타", placeholder:"전달하고 싶은 내용이 있다면 적어주세요." },
-    { key:"consent",     label:"상담 목적의 개인정보 수집·이용에 동의합니다", type:"checkbox", required:true }
-  ];
-
-  var CATEGORY_LABELS = { skincare:"스킨케어", color:"색조", body:"바디", food:"식품" };
-
-  // fieldState holds values for non-native-input types: segmented (string), multiselect (array)
-  var fieldState = {};
-  var segInstances = {};
-
-  function fieldDefaultValue(f){
-    if(f.prefillFromState === "voucher") return state.voucher ? "have" : "none";
-    if(f.prefillFromState) return state[f.prefillFromState];
-    if(f.type === "segmented") return f.options[0].value;
-    if(f.type === "multiselect") return [];
-    return "";
-  }
-
-  function fieldsMount(){ return document.getElementById("fields-mount"); }
-
-  function renderFields(){
-    var mount = fieldsMount();
-    if(!mount) return;
-    mount.innerHTML = "";
-    segInstances = {};
-    FIELDS.forEach(function(f){
-      if(f.group){
-        var h = document.createElement("div");
-        h.className = "form-group-title";
-        h.textContent = f.group;
-        mount.appendChild(h);
-      }
-
-      var row = document.createElement("div");
-      row.className = "field-row";
-
-      if(f.type !== "checkbox"){
-        var label = document.createElement("label");
-        label.className = "field-label";
-        label.setAttribute("for", "field-" + f.key);
-        label.textContent = f.label;
-        if(f.required){
-          var req = document.createElement("span");
-          req.className = "req";
-          req.textContent = "*";
-          label.appendChild(req);
-        }
-        row.appendChild(label);
-      }
-
-      if(f.type === "textarea"){
-        var ta = document.createElement("textarea");
-        ta.className = "field-input";
-        ta.id = "field-" + f.key;
-        ta.name = f.key;
-        if(f.placeholder) ta.placeholder = f.placeholder;
-        row.appendChild(ta);
-
-      } else if(f.type === "select"){
-        var sel = document.createElement("select");
-        sel.className = "field-select";
-        sel.id = "field-" + f.key;
-        sel.name = f.key;
-        var blank = document.createElement("option");
-        blank.value = ""; blank.textContent = "선택해 주세요";
-        sel.appendChild(blank);
-        f.options.forEach(function(opt){
-          var o = document.createElement("option");
-          o.value = opt; o.textContent = opt;
-          sel.appendChild(o);
-        });
-        if(f.required) sel.setAttribute("aria-required", "true");
-        sel.addEventListener("change", function(){ clearFieldError(f.key); updateSubmitState(); });
-        row.appendChild(sel);
-
-      } else if(f.type === "segmented"){
-        fieldState[f.key] = fieldDefaultValue(f);
-        var seg = segmented({
-          ariaLabel: f.label,
-          options: f.options,
-          value: fieldState[f.key],
-          onChange: function(key){ return function(v){ fieldState[key] = v; clearFieldError(key); updateSubmitState(); }; }(f.key)
-        });
-        seg.el.id = "field-" + f.key;
-        segInstances[f.key] = seg;
-        row.appendChild(seg.el);
-
-      } else if(f.type === "multiselect"){
-        fieldState[f.key] = [];
-        var chipWrap = document.createElement("div");
-        chipWrap.className = "chip-group";
-        chipWrap.id = "field-" + f.key;
-        f.options.forEach(function(opt){
-          var chip = document.createElement("button");
-          chip.type = "button";
-          chip.className = "chip";
-          chip.setAttribute("aria-pressed", "false");
-          chip.textContent = opt;
-          chip.addEventListener("click", function(){
-            var arr = fieldState[f.key];
-            var idx = arr.indexOf(opt);
-            if(idx === -1){ arr.push(opt); chip.setAttribute("aria-pressed", "true"); }
-            else { arr.splice(idx, 1); chip.setAttribute("aria-pressed", "false"); }
-            updateSubmitState();
-          });
-          chipWrap.appendChild(chip);
-        });
-        row.appendChild(chipWrap);
-
-      } else if(f.type === "checkbox"){
-        var crow = document.createElement("label");
-        crow.className = "consent-row";
-        crow.setAttribute("for", "field-" + f.key);
-        var cb = document.createElement("input");
-        cb.type = "checkbox";
-        cb.id = "field-" + f.key;
-        cb.name = f.key;
-        if(f.required) cb.setAttribute("aria-required", "true");
-        cb.addEventListener("change", function(){ clearFieldError(f.key); updateSubmitState(); });
-        crow.appendChild(cb);
-        var ctext = document.createElement("span");
-        ctext.textContent = f.label + (f.required ? " *" : "");
-        crow.appendChild(ctext);
-        row.appendChild(crow);
-
-      } else {
-        var input = document.createElement("input");
-        input.type = f.type;
-        input.className = "field-input";
-        input.id = "field-" + f.key;
-        input.name = f.key;
-        if(f.placeholder) input.placeholder = f.placeholder;
-        if(f.required) input.setAttribute("aria-required", "true");
-        input.addEventListener("input", function(){ clearFieldError(f.key); updateSubmitState(); });
-        row.appendChild(input);
-      }
-
-      var err = document.createElement("p");
-      err.className = "field-error";
-      err.id = "err-" + f.key;
-      row.appendChild(err);
-
-      mount.appendChild(row);
-    });
-    updateSubmitState();
-  }
-
-  function clearFieldError(key){
-    var errEl = document.getElementById("err-" + key);
-    if(errEl){ errEl.textContent = ""; errEl.classList.remove("is-visible"); }
-  }
-
-  function isFormValid(){
-    return FIELDS.every(function(f){ return !validateField(f); });
-  }
-
-  function updateSubmitState(){
-    var btn = document.getElementById("btn-submit-consult");
-    if(btn) btn.disabled = !isFormValid();
-  }
-
-  // Re-sync estimator-prefilled form fields (category/size/goal/voucherField) when the top controls change.
-  function syncFormPrefill(){
-    FIELDS.forEach(function(f){
-      if(!f.prefillFromState) return;
-      var v = fieldDefaultValue(f);
-      fieldState[f.key] = v;
-      if(segInstances[f.key]) segInstances[f.key].setValue(v);
-    });
-    updateSubmitState();
-  }
-
-  function renderSummary(){
-    var grid = document.getElementById("summary-grid");
-    if(!grid || !lastResult) return;
-    var r = lastResult;
-    var items = [
-      ["카테고리", CATEGORY_LABELS[state.category]],
-      ["인원", SIZE[state.size].label],
-      ["목표", GOAL[state.goal].label],
-      ["바우처", state.voucher ? "적용" : "미적용"],
-      ["예상 도달", fmt(r.reachLow) + "명 이상"],
-      ["예상 참여", fmt(r.engLow) + "회 이상"]
-    ];
-    grid.innerHTML = "";
-    items.forEach(function(pair){
-      var el = document.createElement("div");
-      el.className = "summary-item";
-      var span = document.createElement("span");
-      span.textContent = pair[0];
-      var strong = document.createElement("strong");
-      strong.textContent = pair[1];
-      el.appendChild(span);
-      el.appendChild(strong);
-      grid.appendChild(el);
-    });
-  }
-
-  renderFields();
   render();
 
-  function openConsult(){
-    document.getElementById("consult").classList.add("is-open");
-    document.getElementById("consult-form-wrap").style.display = "";
-    document.getElementById("consult-success").style.display = "none";
-    renderSummary();
-    document.querySelectorAll('#consult .reveal').forEach(observe);
-    document.getElementById("consult").scrollIntoView({ behavior: prefersReducedEarly ? "auto" : "smooth", block: "start" });
-  }
-
-  var openBtns = document.querySelectorAll('[data-open-consult]');
-  openBtns.forEach(function(b){ b.addEventListener("click", openConsult); });
-
-  var EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
-  function getFieldValue(f){
-    if(f.type === "segmented" || f.type === "multiselect") return fieldState[f.key];
-    var el = document.getElementById("field-" + f.key);
-    if(!el) return "";
-    if(f.type === "checkbox") return el.checked;
-    return el.value;
-  }
-
-  function validateField(f){
-    var value = getFieldValue(f);
-    if(f.type === "checkbox"){
-      if(f.required && !value) return "동의가 필요합니다.";
-      return "";
-    }
-    if(f.type === "multiselect"){
-      return "";
-    }
-    if(f.type === "segmented"){
-      if(f.required && !value) return "선택해 주세요.";
-      return "";
-    }
-    if(f.type === "select"){
-      if(f.required && !value) return "선택해 주세요.";
-      return "";
-    }
-    value = (value || "").trim();
-    if(f.required && !value) return "필수 입력 항목입니다.";
-    if(f.type === "email" && value && !EMAIL_RE.test(value)) return "이메일 형식을 확인해 주세요.";
-    if(f.type === "url" && value && !/^https?:\/\//i.test(value)) return "URL은 http:// 또는 https://로 시작해야 합니다.";
-    return "";
-  }
-
-  function labelForValue(f, value){
-    if(f.type === "segmented"){
-      var opt = f.options.filter(function(o){ return o.value === value; })[0];
-      return opt ? opt.label : "-";
-    }
-    if(f.type === "multiselect") return (value && value.length) ? value.join(", ") : "-";
-    if(f.type === "checkbox") return value ? "동의함" : "미동의";
-    return value || "-";
-  }
-
-  function buildPayload(){
-    var r = lastResult || compute();
-    var values = {};
-    FIELDS.forEach(function(f){
-      values[f.key] = getFieldValue(f);
-    });
+  // 견적 문의 모달(assets/quote-form.js)이 제출 시점에 읽는 현재 계산기 조건.
+  window.encluQuoteContext = function(){
     return {
-      selection: {
-        category: CATEGORY_LABELS[state.category],
-        size: SIZE[state.size].label,
-        goal: GOAL[state.goal].label,
-        voucher: state.voucher ? "적용" : "미적용"
-      },
-      projection: {
-        reach: fmt(r.reachLow) + "명 이상",
-        engagement: fmt(r.engLow) + "회 이상",
-        note: "AI 예측 데이터, 4주 진행 기준"
-      },
-      contact: values,
-      pageUrl: window.location.href,
-      timestamp: new Date().toISOString()
+      category: WEEDY_BENCHMARKS[state.category].label,
+      size: SIZE[state.size].label,
+      goal: GOAL[state.goal].label,
+      voucher: state.voucher ? "적용" : "미적용"
     };
-  }
-
-  function buildMailto(payload){
-    var subject = "[시딩 상담 요청] " + (payload.contact.company || "회사명 미입력");
-    var lines = [];
-    lines.push("=== 선택 조건 ===");
-    lines.push("카테고리: " + payload.selection.category);
-    lines.push("인원: " + payload.selection.size);
-    lines.push("목표: " + payload.selection.goal);
-    lines.push("수출바우처: " + payload.selection.voucher);
-    lines.push("");
-    lines.push("=== AI 예측 데이터 ===");
-    lines.push("예상 도달: " + payload.projection.reach);
-    lines.push("예상 참여: " + payload.projection.engagement);
-    lines.push("");
-    lines.push("=== 상담 내용 ===");
-    FIELDS.forEach(function(f){
-      lines.push(f.label + ": " + labelForValue(f, payload.contact[f.key]));
-    });
-    lines.push("");
-    lines.push("페이지: " + payload.pageUrl);
-    lines.push("요청 시각: " + payload.timestamp);
-    var body = lines.join("\n");
-    return "mailto:" + CONSULT_EMAIL + "?subject=" + encodeURIComponent(subject) + "&body=" + encodeURIComponent(body);
-  }
-
-  function showStatus(msg, kind){
-    var el = document.getElementById("form-status");
-    el.textContent = msg;
-    el.className = "form-status is-visible" + (kind ? " " + kind : "");
-  }
-
-  var consultForm = document.getElementById("consult-form");
-  if(consultForm){
-    consultForm.addEventListener("submit", function(e){
-      e.preventDefault();
-      var valid = true;
-      FIELDS.forEach(function(f){
-        var errEl = document.getElementById("err-" + f.key);
-        var msg = validateField(f);
-        var markEl = document.getElementById("field-" + f.key);
-        if(msg){
-          valid = false;
-          if(markEl && (f.type === "text" || f.type === "email" || f.type === "tel" || f.type === "url" || f.type === "select")) markEl.classList.add("has-error");
-          errEl.textContent = msg;
-          errEl.classList.add("is-visible");
-        } else {
-          if(markEl) markEl.classList.remove("has-error");
-          errEl.classList.remove("is-visible");
-        }
-      });
-      if(!valid){
-        showStatus("입력값을 확인해 주세요.", "err");
-        return;
-      }
-
-      var payload = buildPayload();
-      var submitBtn = document.getElementById("btn-submit-consult");
-      submitBtn.disabled = true;
-
-      if(SUBMIT_ENDPOINT){
-        fetch(SUBMIT_ENDPOINT, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload)
-        }).then(function(res){
-          if(!res.ok) throw new Error("bad status");
-          showSuccess();
-        }).catch(function(){
-          submitBtn.disabled = false;
-          showStatus("전송에 실패했습니다. 잠시 후 다시 시도해 주세요.", "err");
-        });
-      } else {
-        window.location.href = buildMailto(payload);
-        showSuccess();
-      }
-    });
-  }
-
-  function showSuccess(){
-    document.getElementById("consult-form-wrap").style.display = "none";
-    document.getElementById("consult-success").style.display = "";
-    showStatus("", "");
-  }
-
-  // Deep-link support: ?form=1 or #consult opens the form directly (used for QA screenshots too).
-  if(/[?&]form=1\b/.test(window.location.search) || window.location.hash === "#consult"){
-    openConsult();
-  }
+  };
 
   // ---------------- reveal-on-scroll (ported pattern from v6-apple.html) ----------------
   var prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -1281,5 +777,6 @@
   document.querySelectorAll('.reveal').forEach(observe);
 })();
 </script>
+<script src="assets/quote-form.js"></script>
 </body>
 </html>
