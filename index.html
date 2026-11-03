@@ -674,17 +674,42 @@
   /* ---------- Brands ---------- */
   .brands h2, .brands .subhead{color:#fff;}
   .brands .subhead{color:var(--on-dark-muted);}
-  .brand-wall{display:grid;grid-template-columns:repeat(7,1fr);gap:1px;background:var(--hairline-dark);border-radius:var(--radius);overflow:hidden;margin-top:56px;}
+  /* Logo marquee: the script below appends one copy of .brand-set, so -50% of
+     the track is exactly one set. padding-right counts the trailing gap into
+     that width, which is what makes the loop seamless. overflow:clip (not
+     hidden) stops keyboard focus from scrolling the wall out of step. */
+  .brand-wall{
+    overflow:hidden;overflow:clip;margin-top:56px;
+    -webkit-mask-image:linear-gradient(to right,transparent,#000 6%,#000 94%,transparent);
+    mask-image:linear-gradient(to right,transparent,#000 6%,#000 94%,transparent);
+  }
+  .brand-track{display:flex;width:max-content;animation:brandFlow 120s linear infinite;}
+  @keyframes brandFlow{ from{transform:translateX(0);} to{transform:translateX(-50%);} }
+  @media (hover:hover){ .brand-wall:hover .brand-track{animation-play-state:paused;} }
+  .brand-wall:has(:focus-visible) .brand-track{animation-play-state:paused;}
+  .brand-set{display:flex;gap:12px;padding-right:12px;}
   .brand-chip{
-    background:#141414;padding:18px 10px;display:flex;flex-direction:column;align-items:center;justify-content:center;
-    height:92px;width:100%;
+    background:#141414;border:1px solid var(--hairline-dark);border-radius:var(--radius-sm);
+    padding:18px 10px;display:flex;flex-direction:column;align-items:center;justify-content:center;
+    flex:0 0 auto;width:208px;height:124px;
     transition:background var(--dur-2) var(--ease);
   }
   .brand-chip:hover,.brand-chip:focus-visible{background:#1d1d1d;}
-  .brand-chip img{height:28px;width:auto;display:block;max-width:86%;filter:brightness(0) invert(1);opacity:0.86;}
-  .brand-name{font-size:11px;font-weight:500;color:var(--on-dark-muted-56);text-align:center;margin-top:8px;}
-  @media (max-width:1024px){ .brand-wall{grid-template-columns:repeat(4,1fr);} }
-  @media (max-width:640px){ .brand-wall{grid-template-columns:repeat(3,1fr);} }
+  .brand-chip:focus-visible{outline-offset:-2px;border-radius:var(--radius-sm);}
+  .brand-chip img{height:40px;width:auto;display:block;max-width:86%;object-fit:contain;filter:brightness(0) invert(1);opacity:0.86;}
+  .brand-name{font-size:12px;font-weight:500;color:var(--on-dark-muted-56);text-align:center;margin-top:8px;}
+  @media (max-width:734px){
+    .brand-set{gap:8px;padding-right:8px;}
+    .brand-chip{width:156px;height:104px;padding:14px 8px;}
+    .brand-chip img{height:32px;}
+    .brand-name{font-size:11px;}
+  }
+  @media (prefers-reduced-motion:reduce){
+    .brand-wall{overflow:visible;-webkit-mask-image:none;mask-image:none;}
+    .brand-track{display:block;width:auto;animation:none;}
+    .brand-set{flex-wrap:wrap;justify-content:center;padding-right:0;}
+    .brand-set[aria-hidden]{display:none;}
+  }
 
   /* ---------- Handoff ---------- */
   .handoff-card{text-align:center;max-width:680px;margin:0 auto;}
@@ -1505,33 +1530,33 @@
 <!-- ===================== BRANDS ===================== -->
 <section class="on-dark brands" id="brands">
   <div class="wrap sec-head eyebrow-free reveal">
-    <h2 class="headline-sm">21개 브랜드가 함께하고 있습니다</h2>
+    <h2 class="headline-sm">다양한 K-뷰티 브랜드가 함께하고 있습니다</h2>
     <p class="subhead">엔클루 네트워크로 일본·미국·베트남·말레이시아에 진출한 K-뷰티 브랜드입니다.</p>
   </div>
   <div class="wrap-wide">
-    <div class="brand-wall reveal" id="brandWall">
-      <button type="button" class="brand-chip reveal" aria-label="ABIB 로고"><img src="assets/IMG/brands/abib.svg" alt="" aria-hidden="true" width="140" height="40" loading="lazy"><span class="brand-name">ABIB</span></button>
-      <button type="button" class="brand-chip reveal" aria-label="Ariul 로고"><img src="assets/IMG/brands/ariul.svg" alt="" aria-hidden="true" width="140" height="40" loading="lazy"><span class="brand-name">Ariul</span></button>
-      <button type="button" class="brand-chip reveal" aria-label="Begins 로고"><img src="assets/IMG/brands/begins.svg" alt="" aria-hidden="true" width="140" height="40" loading="lazy"><span class="brand-name">Begins</span></button>
-      <button type="button" class="brand-chip reveal" aria-label="CAELA 로고"><img src="assets/IMG/brands/caela.svg" alt="" aria-hidden="true" width="140" height="40" loading="lazy"><span class="brand-name">CAELA</span></button>
-      <button type="button" class="brand-chip reveal" aria-label="CELLADIX 로고"><img src="assets/IMG/brands/celladix.svg" alt="" aria-hidden="true" width="140" height="40" loading="lazy"><span class="brand-name">CELLADIX</span></button>
-      <button type="button" class="brand-chip reveal" aria-label="Chasin Rabbits 로고"><img src="assets/IMG/brands/chasin-rabbits.svg" alt="" aria-hidden="true" width="140" height="40" loading="lazy"><span class="brand-name">Chasin Rabbits</span></button>
-      <button type="button" class="brand-chip reveal" aria-label="Dr.Choi Solution 로고"><img src="assets/IMG/brands/dr-choi-solution.svg" alt="" aria-hidden="true" width="140" height="40" loading="lazy"><span class="brand-name">Dr.Choi Solution</span></button>
-      <button type="button" class="brand-chip reveal" aria-label="Dr.Different 로고"><img src="assets/IMG/brands/dr-different.svg" alt="" aria-hidden="true" width="140" height="40" loading="lazy"><span class="brand-name">Dr.Different</span></button>
-      <button type="button" class="brand-chip reveal" aria-label="Dr.Nineteen 로고"><img src="assets/IMG/brands/dr-nineteen.svg" alt="" aria-hidden="true" width="140" height="40" loading="lazy"><span class="brand-name">Dr.Nineteen</span></button>
-      <button type="button" class="brand-chip reveal" aria-label="FIVEVIBE 로고"><img src="assets/IMG/brands/fivevibe.svg" alt="" aria-hidden="true" width="140" height="40" loading="lazy"><span class="brand-name">FIVEVIBE</span></button>
-      <button type="button" class="brand-chip reveal" aria-label="INGA 로고"><img src="assets/IMG/brands/inga.svg" alt="" aria-hidden="true" width="140" height="40" loading="lazy"><span class="brand-name">INGA</span></button>
-      <button type="button" class="brand-chip reveal" aria-label="isoi 로고"><img src="assets/IMG/brands/isoi.svg" alt="" aria-hidden="true" width="140" height="40" loading="lazy"><span class="brand-name">isoi</span></button>
-      <button type="button" class="brand-chip reveal" aria-label="KUNDAL 로고"><img src="assets/IMG/brands/kundal.svg" alt="" aria-hidden="true" width="140" height="40" loading="lazy"><span class="brand-name">KUNDAL</span></button>
-      <button type="button" class="brand-chip reveal" aria-label="Lanbelle 로고"><img src="assets/IMG/brands/lanbelle.svg" alt="" aria-hidden="true" width="140" height="40" loading="lazy"><span class="brand-name">Lanbelle</span></button>
-      <button type="button" class="brand-chip reveal" aria-label="MASTINA 로고"><img src="assets/IMG/brands/mastina.svg" alt="" aria-hidden="true" width="140" height="40" loading="lazy"><span class="brand-name">MASTINA</span></button>
-      <button type="button" class="brand-chip reveal" aria-label="NEEDLY 로고"><img src="assets/IMG/brands/needly.svg" alt="" aria-hidden="true" width="140" height="40" loading="lazy"><span class="brand-name">NEEDLY</span></button>
-      <button type="button" class="brand-chip reveal" aria-label="NM 로고"><img src="assets/IMG/brands/nm.svg" alt="" aria-hidden="true" width="140" height="40" loading="lazy"><span class="brand-name">NM</span></button>
-      <button type="button" class="brand-chip reveal" aria-label="Papa Recipe 로고"><img src="assets/IMG/brands/papa-recipe.svg" alt="" aria-hidden="true" width="140" height="40" loading="lazy"><span class="brand-name">Papa Recipe</span></button>
-      <button type="button" class="brand-chip reveal" aria-label="Real Barrier 로고"><img src="assets/IMG/brands/realbarrier.svg" alt="" aria-hidden="true" width="140" height="40" loading="lazy"><span class="brand-name">Real Barrier</span></button>
-      <button type="button" class="brand-chip reveal" aria-label="SOME BY MI 로고"><img src="assets/IMG/brands/somebymi.svg" alt="" aria-hidden="true" width="140" height="40" loading="lazy"><span class="brand-name">SOME BY MI</span></button>
-      <button type="button" class="brand-chip reveal" aria-label="TOOZ 로고"><img src="assets/IMG/brands/tooz.svg" alt="" aria-hidden="true" width="140" height="40" loading="lazy"><span class="brand-name">TOOZ</span></button>
-    </div>
+    <div class="brand-wall reveal" id="brandWall"><div class="brand-track"><div class="brand-set">
+      <button type="button" class="brand-chip" aria-label="ABIB 로고"><img src="assets/IMG/brands/abib.svg" alt="" aria-hidden="true" width="140" height="40" decoding="async"><span class="brand-name">ABIB</span></button>
+      <button type="button" class="brand-chip" aria-label="Ariul 로고"><img src="assets/IMG/brands/ariul.svg" alt="" aria-hidden="true" width="140" height="40" decoding="async"><span class="brand-name">Ariul</span></button>
+      <button type="button" class="brand-chip" aria-label="Begins 로고"><img src="assets/IMG/brands/begins.svg" alt="" aria-hidden="true" width="140" height="40" decoding="async"><span class="brand-name">Begins</span></button>
+      <button type="button" class="brand-chip" aria-label="CAELA 로고"><img src="assets/IMG/brands/caela.svg" alt="" aria-hidden="true" width="140" height="40" decoding="async"><span class="brand-name">CAELA</span></button>
+      <button type="button" class="brand-chip" aria-label="CELLADIX 로고"><img src="assets/IMG/brands/celladix.svg" alt="" aria-hidden="true" width="140" height="40" decoding="async"><span class="brand-name">CELLADIX</span></button>
+      <button type="button" class="brand-chip" aria-label="Chasin Rabbits 로고"><img src="assets/IMG/brands/chasin-rabbits.svg" alt="" aria-hidden="true" width="140" height="40" decoding="async"><span class="brand-name">Chasin Rabbits</span></button>
+      <button type="button" class="brand-chip" aria-label="Dr.Choi Solution 로고"><img src="assets/IMG/brands/dr-choi-solution.svg" alt="" aria-hidden="true" width="140" height="40" decoding="async"><span class="brand-name">Dr.Choi Solution</span></button>
+      <button type="button" class="brand-chip" aria-label="Dr.Different 로고"><img src="assets/IMG/brands/dr-different.svg" alt="" aria-hidden="true" width="140" height="40" decoding="async"><span class="brand-name">Dr.Different</span></button>
+      <button type="button" class="brand-chip" aria-label="Dr.Nineteen 로고"><img src="assets/IMG/brands/dr-nineteen.svg" alt="" aria-hidden="true" width="140" height="40" decoding="async"><span class="brand-name">Dr.Nineteen</span></button>
+      <button type="button" class="brand-chip" aria-label="FIVEVIBE 로고"><img src="assets/IMG/brands/fivevibe.svg" alt="" aria-hidden="true" width="140" height="40" decoding="async"><span class="brand-name">FIVEVIBE</span></button>
+      <button type="button" class="brand-chip" aria-label="INGA 로고"><img src="assets/IMG/brands/inga.svg" alt="" aria-hidden="true" width="140" height="40" decoding="async"><span class="brand-name">INGA</span></button>
+      <button type="button" class="brand-chip" aria-label="isoi 로고"><img src="assets/IMG/brands/isoi.svg" alt="" aria-hidden="true" width="140" height="40" decoding="async"><span class="brand-name">isoi</span></button>
+      <button type="button" class="brand-chip" aria-label="KUNDAL 로고"><img src="assets/IMG/brands/kundal.svg" alt="" aria-hidden="true" width="140" height="40" decoding="async"><span class="brand-name">KUNDAL</span></button>
+      <button type="button" class="brand-chip" aria-label="Lanbelle 로고"><img src="assets/IMG/brands/lanbelle.svg" alt="" aria-hidden="true" width="140" height="40" decoding="async"><span class="brand-name">Lanbelle</span></button>
+      <button type="button" class="brand-chip" aria-label="MASTINA 로고"><img src="assets/IMG/brands/mastina.svg" alt="" aria-hidden="true" width="140" height="40" decoding="async"><span class="brand-name">MASTINA</span></button>
+      <button type="button" class="brand-chip" aria-label="NEEDLY 로고"><img src="assets/IMG/brands/needly.svg" alt="" aria-hidden="true" width="140" height="40" decoding="async"><span class="brand-name">NEEDLY</span></button>
+      <button type="button" class="brand-chip" aria-label="NM 로고"><img src="assets/IMG/brands/nm.svg" alt="" aria-hidden="true" width="140" height="40" decoding="async"><span class="brand-name">NM</span></button>
+      <button type="button" class="brand-chip" aria-label="Papa Recipe 로고"><img src="assets/IMG/brands/papa-recipe.svg" alt="" aria-hidden="true" width="140" height="40" decoding="async"><span class="brand-name">Papa Recipe</span></button>
+      <button type="button" class="brand-chip" aria-label="Real Barrier 로고"><img src="assets/IMG/brands/realbarrier.svg" alt="" aria-hidden="true" width="140" height="40" decoding="async"><span class="brand-name">Real Barrier</span></button>
+      <button type="button" class="brand-chip" aria-label="SOME BY MI 로고"><img src="assets/IMG/brands/somebymi.svg" alt="" aria-hidden="true" width="140" height="40" decoding="async"><span class="brand-name">SOME BY MI</span></button>
+      <button type="button" class="brand-chip" aria-label="TOOZ 로고"><img src="assets/IMG/brands/tooz.svg" alt="" aria-hidden="true" width="140" height="40" decoding="async"><span class="brand-name">TOOZ</span></button>
+    </div></div></div>
   </div>
 </section>
 
@@ -2050,6 +2075,32 @@
   setPaused(userPaused);
   window.addEventListener('resize', function(){ measure(); syncVideos(); });
   document.addEventListener('visibilitychange', syncVideos);
+})();
+</script>
+
+<!-- brands:js -->
+<script>
+(function(){
+  // Motion is CSS only (.brand-track); this just adds the second set it loops into.
+  var wall = document.getElementById('brandWall');
+  var set = wall && wall.querySelector('.brand-set');
+  if(!set) return;
+  var track = set.parentNode;
+  var copy = set.cloneNode(true);
+  copy.setAttribute('aria-hidden', 'true');
+  copy.querySelectorAll('.brand-chip').forEach(function(c){ c.tabIndex = -1; });
+  track.appendChild(copy);
+
+  // The marquee pauses on keyboard focus, which could strand the focused chip
+  // off-screen, so seek the paused animation to bring it into view.
+  wall.addEventListener('focusin', function(e){
+    if(!e.target.matches(':focus-visible') || !track.getAnimations) return;
+    var anim = track.getAnimations()[0];
+    if(!anim) return;
+    var setWidth = track.offsetWidth / 2;
+    var x = Math.max(0, e.target.offsetLeft - set.children[0].offsetLeft - wall.clientWidth * 0.1);
+    anim.currentTime = anim.effect.getComputedTiming().duration * (x / setWidth);
+  });
 })();
 </script>
 
