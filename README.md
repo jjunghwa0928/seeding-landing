@@ -2,8 +2,8 @@
 
 정적 HTML. `index.html`(랜딩 + 리뷰 매거진), `tool.html`(예상 실적 확인).
 
-- 리뷰 매거진은 Weedy API에서 매주 월요일 09:00 자동 갱신 후 커밋·푸시된다 (`scripts/`, Hermes cron `seeding-reviews-weekly`).
-- 배포: Windows Server + IIS(정적 파일 서빙, `/api/*`는 URL Rewrite + ARR 프록시) + PM2(Node API). 서버에서 `git pull`로 동기화한다. 아래 "견적 문의 메일 API" 참고.
+- 리뷰 매거진은 서버가 매주 월요일 09:00 위디 베스트 리뷰로 직접 갱신한다. 아래 "리뷰 자동 갱신 (서버)" 참고.
+- 배포: Windows Server + IIS(정적 파일 서빙, `/api/*`는 URL Rewrite + ARR 프록시) + PM2(Node API). 서버에서 `deploy\refresh-reviews.bat`으로 동기화한다 (맨손 `git pull`은 쓰지 않는다). 아래 "견적 문의 메일 API"와 "리뷰 자동 갱신 (서버)" 참고.
 - 디자인 작업 원본·스크린샷·핸드오프: `~/Desktop/hermes/seeding-redesign/` (로컬 전용).
 - SEO/AEO/GEO: 두 페이지 `<head>`의 canonical·OG·JSON-LD, `index.html#faq` 섹션, 루트의 `sitemap.xml`·`robots.txt`·`llms.txt`·`llms-full.txt`·`.nojekyll` (절대 URL은 모두 `/seeding-landing/` 서브패스 포함).
 
@@ -76,9 +76,84 @@ npm install
 npm test     # node:test, 네트워크 없이 실행
 ```
 
+## 리뷰 자동 갱신 (서버)
+
+위디 베스트 리뷰(`getprimreview`, 광고주가 BEST로 고른 리뷰)를 받아 `index.html`의 리뷰 갤러리와 히어로 월을 **매주 전량 교체**한다. 사이트에는 항상 현재 베스트 목록만 나온다.
+
+`scripts/refresh_reviews.py`가 `logs/` 아래 임시 폴더에서 전부 만들고 검증한 뒤에만 실제 파일과 바꾼다. 새 이미지 → manifest → `index.html` 순서로 교체하고 옛 이미지는 마지막에 지우므로, 페이지가 없는 파일을 가리키는 순간이 없다. 다음 중 하나라도 해당하면 사이트를 건드리지 않고 실패로 끝난다.
+
+- 이미지를 확보한 리뷰가 40건 미만 (다운로드에 실패한 항목은 빼고 센다)
+- `index.html`이 참조하는 `assets/reviews/` 파일이 하나라도 없음
+- `<!-- weedy:js -->` 블록이나 히어로 월 열 구성이 커밋된 기준본과 달라짐
+
+### 생성 파일과 git
+
+`index.html`, `assets/weedy-manifest*.json`, `assets/reviews/**`는 git에 추적되는 채로 두고, 커밋된 내용을 **기준본**으로만 쓴다. 그래서 서버의 `git status`에는 이 파일들이 항상 변경됨으로 나오며 정상이다. 서버에서 이 변경을 커밋하거나 푸시하지 않는다.
+
+배치 파일은 먼저 `refresh_reviews.py --git-sync-only`로 코드를 맞춘다. origin/main에 새 커밋이 없으면 파일을 전혀 건드리지 않는다. 새 커밋이 있으면 다음 순서로 진행한다.
+
+1. 생성 파일을 임시 폴더에 복사한다.
+2. 생성 파일을 커밋 상태로 되돌리고, 예전 갱신이 남긴 추적되지 않는 이미지를 지운다.
+3. `git merge --ff-only origin/main`을 실행한다.
+4. 1번에서 복사한 파일을 성공·실패와 무관하게 되살린다.
+
+이 방식을 고른 이유는 다음과 같다.
+
+- 되돌리고 pull만 하면 갱신이 끝날 때까지 수 분 동안 사이트가 커밋 시점의 옛 갤러리로 돌아가고, 갱신이 실패하면 그 상태로 남는다. 위 방식은 되돌림이 merge하는 몇 초뿐이고, 갱신이 실패해도 지난주 갤러리가 유지된다.
+- 빌드는 작업 폴더가 아니라 `git show HEAD:index.html`을 기준으로 하므로 새 커밋의 `index.html` 수정이 빠짐없이 반영된다.
+- 서버에서 생성 파일 외의 추적 파일을 직접 고쳤고 그 파일이 새 커밋에도 바뀌었다면 merge가 거부되어 실패로 끝난다 (덮어쓰지 않는다).
+- `git clean`은 쓰지 않는다. 저장소 루트에 `api/.env`와 `api/node_modules`가 있다.
+- 4번 복원이 실패하면 로그에 찍힌 `logs\.refresh-snapshot-*` 폴더가 남는다. 저장소 루트에서 `robocopy logs\.refresh-snapshot-XXXX . /E`로 되살린 뒤 그 폴더를 지운다.
+
+**배포할 때도 `git pull` 대신 `deploy\refresh-reviews.bat`을 실행한다.** 맨손 `git pull`은 새 커밋이 생성 파일을 건드리면 거부된다. `index.html`을 고친 커밋은 이 배치가 돌아야 사이트에 반영된다.
+
+### 서버 최초 설정
+
+1. Python 3을 설치하고 패키지를 설치한다.
+
+   ```bat
+   py -3 -m pip install -r scripts\requirements.txt
+   ```
+
+2. 작업을 돌릴 계정을 정한다. 이 계정에 저장소 폴더 쓰기 권한과 `git pull`용 인증 정보가 있어야 하고, `git`이 PATH에 있어야 한다. 저장소 소유자가 아닌 계정이면 그 계정으로 다음을 한 번 실행한다.
+
+   ```bat
+   git config --global --add safe.directory C:/경로/seeding-landing
+   ```
+
+3. 그 계정으로 수동 1회 실행해 확인한다. 종료 코드가 0이고 로그 끝에 `리뷰 갱신 완료`가 나와야 한다.
+
+   ```bat
+   deploy\refresh-reviews.bat
+   echo %ERRORLEVEL%
+   ```
+
+4. 작업 스케줄러에 등록한다 (매주 월요일 09:00, 로그온 여부와 무관하게 실행). `/RP *`는 비밀번호를 입력받는다.
+
+   ```bat
+   schtasks /Create /TN "seeding-reviews-weekly" /TR "\"C:\경로\seeding-landing\deploy\refresh-reviews.bat\"" /SC WEEKLY /D MON /ST 09:00 /RU <계정> /RP * /F
+   ```
+
+`py -3` 대신 특정 Python을 쓰려면 환경 변수 `PYTHON`에 실행 파일 전체 경로를 따옴표 없이 넣는다.
+
+### 확인
+
+로그는 `logs\refresh-reviews.log`에 시작·종료 시각과 함께 쌓인다. 웹으로는 서빙되지 않는다 (`web.config`의 `hiddenSegments`).
+
+```bat
+powershell -Command "Get-Content logs\refresh-reviews.log -Encoding UTF8 -Tail 20"
+schtasks /Query /TN "seeding-reviews-weekly" /V /FO LIST
+```
+
+사이트를 바꾸지 않고 빌드와 검증만 하려면 `--dry-run`을 쓴다. 이 옵션은 코드 동기화 없이 현재 HEAD 기준으로 돈다.
+
+```bat
+py -3 scripts\refresh_reviews.py --dry-run
+```
+
 ## 릴스 교체 방법
 
-ffmpeg가 필요하다. 주간 리뷰 cron은 이 영역을 건드리지 않는다.
+ffmpeg가 필요하다. 주간 리뷰 갱신은 이 영역을 건드리지 않는다.
 
 1. 원본 영상을 `assets/reels/src/`에 넣는다 (`.mp4 .mov .m4v .webm`, 파일명 순서대로 노출). 이 폴더는 git에 올라가지 않으니 없으면 만든다.
 2. (선택) 카드를 인스타그램으로 연결하려면 `links.txt`에 URL을 한 줄에 하나씩 파일명 순서대로 적는다. 빈 줄은 링크 없는 카드다.

@@ -42,9 +42,11 @@ def main():
         name = hashlib.sha1(origin.encode()).hexdigest()[:16] + ".webp"
         path = os.path.join(a.out_dir, name)
         tpath = os.path.join(a.out_dir, "t", name)
-        if os.path.exists(path) and os.path.exists(tpath):
-            it["src"] = path; it["thumb"] = tpath; skipped += 1; continue
         try:
+            if os.path.exists(path) and os.path.exists(tpath):
+                with Image.open(path) as im:  # a fresh manifest has no w/h for cached files
+                    it["w"], it["h"] = im.size
+                it["src"] = path; it["thumb"] = tpath; skipped += 1; continue
             raw = fetch(origin)
             im = ImageOps.exif_transpose(Image.open(io.BytesIO(raw))).convert("RGB")
             if im.width > a.max_w:
