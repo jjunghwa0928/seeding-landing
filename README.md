@@ -3,9 +3,78 @@
 정적 HTML. `index.html`(랜딩 + 리뷰 매거진), `tool.html`(예상 실적 확인).
 
 - 리뷰 매거진은 Weedy API에서 매주 월요일 09:00 자동 갱신 후 커밋·푸시된다 (`scripts/`, Hermes cron `seeding-reviews-weekly`).
-- 배포: GitHub Pages (main 브랜치 루트). 윈도우 서버는 `git pull`로 동기화.
+- 배포: Windows Server + IIS(정적 파일 서빙, `/api/*`는 URL Rewrite + ARR 프록시) + PM2(Node API). 서버에서 `git pull`로 동기화한다. 아래 "견적 문의 메일 API" 참고.
 - 디자인 작업 원본·스크린샷·핸드오프: `~/Desktop/hermes/seeding-redesign/` (로컬 전용).
 - SEO/AEO/GEO: 두 페이지 `<head>`의 canonical·OG·JSON-LD, `index.html#faq` 섹션, 루트의 `sitemap.xml`·`robots.txt`·`llms.txt`·`llms-full.txt`·`.nojekyll` (절대 URL은 모두 `/seeding-landing/` 서브패스 포함).
+
+## 견적 문의 메일 API
+
+견적 문의 폼(`assets/quote-form.js`)은 `POST /api/quote`로 JSON을 보내고, `api/server.js`가 SMTP(네이버웍스)로 `MAIL_TO`에 메일을 보낸다. 포트는 3201이다 (같은 서버의 `enclu-contact-api`는 3200).
+
+```
+브라우저 → IIS (web.config 리라이트) → Node (PM2 seeding-quote-api, :3201) → SMTP → mkt2@enclu.co.kr
+```
+
+### 서버 설치
+
+1. IIS에 URL Rewrite와 Application Request Routing을 설치하고, IIS 관리자 → 서버 노드 → Application Request Routing Cache → Server Proxy Settings → **Enable proxy**를 켠다. 꺼져 있으면 `/api/*`가 502 또는 404가 된다.
+2. IIS 사이트의 물리 경로를 이 저장소 루트(`web.config`가 있는 폴더)로 지정하고 도메인을 바인딩한다. 폼이 루트 기준 `/api/quote`를 호출하므로 하위 경로 애플리케이션이 아니라 **사이트 루트**여야 한다.
+3. ARR의 Server Proxy Settings에서 "Include TCP port from client IP"를 꺼 두기를 권장한다. 켜져 있어도 서버가 포트를 지우고 IP를 센다.
+4. API를 설치하고 기동한다.
+
+```bat
+cd api
+npm ci --omit=dev
+copy .env.example .env
+rem .env 를 열어 SMTP_PASS 에 네이버웍스 앱 비밀번호를 넣는다
+pm2 start ecosystem.config.js
+pm2 save
+```
+
+서버 재부팅 후 자동 기동이 필요하면 최초 1회 `pm2-windows-startup` 또는 작업 스케줄러에 `pm2 resurrect`를 등록한다. 3201 포트는 외부에 열지 않는다.
+
+`NODE_ENV=production`(PM2가 고정)에서 `SMTP_PASS`가 비어 있으면 서버는 기동을 거부한다. `.env`는 git에 올리지 않는다.
+
+### 확인
+
+```bat
+curl http://localhost:3201/api/health
+curl https://<도메인>/api/health
+```
+
+둘 다 `{"ok":true}`가 와야 한다. 실제 발송 확인:
+
+```bat
+curl -X POST https://<도메인>/api/quote -H "Content-Type: application/json" -d "{\"company\":\"테스트\",\"phone\":\"010-0000-0000\",\"email\":\"test@example.com\",\"quantity\":\"50명 미만\",\"consent\":true}"
+```
+
+로그는 `pm2 logs seeding-quote-api`로 본다. 문의 내용·이메일·비밀값은 기록하지 않고, 접수 IP와 거부 사유만 남는다.
+
+| 응답 | 의미 | 폼 동작 |
+|---|---|---|
+| 200 `{"ok":true}` | 접수 완료 (허니팟에 걸린 요청도 같은 응답, 메일은 안 보냄) | 성공 화면 |
+| 400 `invalid_input` + `fields` | 필수값 누락, 형식 오류, 길이 초과, 동의 없음 | 항목별 오류 표시 |
+| 400 `captcha_failed` | Turnstile 토큰 없음 또는 검증 실패 | 입력 확인 안내 |
+| 429 `rate_limited` / `duplicate` | IP당 10분 5회(전체 API 1분 60회) 초과, 또는 같은 내용 10분 내 재전송 | "잠시 후 다시 시도해 주세요." |
+| 502 `send_failed` | SMTP 발송 실패. `.env`와 `pm2 logs` 확인 | 메일 앱으로 보내기 링크 |
+
+### 스팸 방지 선택: Turnstile 없음
+
+eh(`enclu-contact-api`)는 production에서 `TURNSTILE_SECRET`을 필수로 요구하지만, 여기서는 **선택**이다. 이번에는 프런트엔드 위젯을 넣지 않았기 때문이다. 비어 있으면 production에서 경고만 남기고 허니팟(`website`), 속도 제한, 중복 가드, 본문 16KB 제한에 의존한다.
+
+**위젯을 넣기 전에 `TURNSTILE_SECRET`을 설정하면 모든 문의가 `captcha_failed`로 거부된다.** 위젯과 시크릿은 함께 적용한다.
+
+### GitHub Pages
+
+호스트명이 `github.io`로 끝나면 API가 없으므로 폼이 바로 `mailto:`를 연다. 다른 호스트에서는 네트워크 오류나 5xx일 때만 메일 앱으로 보내기 링크를 보여 준다.
+
+### 개발
+
+```bash
+cd api
+npm install
+npm test     # node:test, 네트워크 없이 실행
+```
 
 ## 릴스 교체 방법
 
@@ -34,6 +103,6 @@ ffmpeg가 필요하다 (Pillow 등 추가 패키지 없음).
 
 흰색으로 뭉개져 읽히지 않는 로고는 `scripts/bake_brands.py`의 `KEEP_COLOR`에 확장자 없는 원본 파일명(예: `59_Maeil`)을 추가하고 다시 실행하면 원래 색으로 나온다. 파일명을 바꾸면 이 목록도 함께 고친다 (맞는 원본이 없으면 스크립트가 경고한다).
 
-브랜드 수는 스크립트가 `index.html`에 자동 반영한다 (`<!-- brands:count -->` 영역, 메타 설명, 통계 수치). `llms.txt`와 `llms-full.txt`의 브랜드 수·목록은 자동 갱신되지 않으니 직접 고친다.
+브랜드 수는 스크립트가 `index.html`의 메타 설명에 자동 반영한다. `llms.txt`와 `llms-full.txt`의 브랜드 수·목록은 자동 갱신되지 않으니 직접 고친다.
 
 주의: 릴스와 마찬가지로 `src`에 있는 로고만 칩으로 만든다. 다른 PC에서 추가할 때는 기존 원본까지 모두 넣고 실행한다.

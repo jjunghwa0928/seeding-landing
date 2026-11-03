@@ -3,11 +3,11 @@
  *
  * 여는 방법
  *  - [data-open-quote] 또는 [data-open-consult] 요소 클릭
- *    (data-quote-message="..."가 있으면 문의 내용을 미리 채움)
+ *    (data-quote-message="..."가 있으면 문의 내용을 미리 채우고, data-quote-source="..."는 문의 경로로 전송)
  *  - 페이지 주소의 #quote (tool.html의 기존 #consult, ?form=1 링크도 지원)
  *
  * 페이지가 window.encluQuoteContext()를 정의하면 제출 시점에 호출해
- * 반환값 {category, size, goal, voucher}를 화면에 표시하지 않고 전송 내용에 덧붙입니다.
+ * 반환값 {category, people, goal, voucher}를 화면에 표시하지 않고 전송 내용에 덧붙입니다.
  *
  * 열 때 history 항목을 하나 추가해 브라우저 뒤로 가기가 페이지 이탈 대신 모달 닫기가 되게 합니다.
  * X/ESC/백드롭으로 닫으면 그 항목을 history.back()으로 되돌려 흔적을 남기지 않습니다.
@@ -16,38 +16,39 @@
   "use strict";
 
   // ==================================================================
-  // SUBMIT ENDPOINT HOOK:
-  // Set SUBMIT_ENDPOINT below to a real URL to POST the JSON payload
-  // there (fetch, method POST, JSON body). When left as '', the form
-  // falls back to opening a prefilled mailto: to mkt2@enclu.co.kr with
-  // the payload written out as readable Korean lines in the body.
+  // SUBMIT ENDPOINT (api/server.js, IIS가 /api/*를 프록시):
+  // The form POSTs JSON here. mailto: to mkt2@enclu.co.kr is only a
+  // fallback: offered inline on a network error or 5xx, and used right
+  // away on GitHub Pages, which has no API.
   // ==================================================================
-  var SUBMIT_ENDPOINT = '';
+  var SUBMIT_ENDPOINT = '/api/quote';
+  var HAS_API = !/\.github\.io$/i.test(window.location.hostname);
   var CONSULT_EMAIL = 'mkt2@enclu.co.kr';
 
+  // api/server.js의 QUANTITY_OPTIONS와 같아야 합니다 (api/test/quote.test.js가 확인).
   var QUANTITY_OPTIONS = ["50명 미만", "50~100명", "100~300명", "300명 이상", "미정 / 상담 후 결정"];
-  var CONTEXT_LABELS = { category:"카테고리", size:"인원", goal:"목표", voucher:"수출바우처" };
+  var CONTEXT_LABELS = { category:"카테고리", people:"인원", goal:"목표", voucher:"수출바우처" };
   var EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   var PHONE_RE = /^[0-9+()\-\s]+$/;
 
   // FIELDS drives rendering, validation and the mail body. Add new fields here only.
   var FIELDS = [
-    { key:"company",  label:"업체명 / 브랜드명", type:"text",  required:true, autocomplete:"organization", placeholder:"예) OOO코스메틱 / OOO브랜드",
+    { key:"company",  label:"업체명 / 브랜드명", type:"text",  required:true, maxlength:100, autocomplete:"organization", placeholder:"예) OOO코스메틱 / OOO브랜드",
       validate:function(v){ return v ? "" : "업체명 또는 브랜드명을 입력해 주세요."; } },
-    { key:"phone",    label:"연락처",           type:"tel",   required:true, autocomplete:"tel", placeholder:"예) 010-0000-0000",
+    { key:"phone",    label:"연락처",           type:"tel",   required:true, maxlength:30, autocomplete:"tel", placeholder:"예) 010-0000-0000",
       validate:function(v){
         if(!v) return "연락처를 입력해 주세요.";
         var digits = v.replace(/\D/g, "").length;
         return (PHONE_RE.test(v) && digits >= 9 && digits <= 15) ? "" : "연락처 형식을 확인해 주세요. 예) 010-0000-0000";
       } },
-    { key:"email",    label:"이메일",           type:"email", required:true, autocomplete:"email", placeholder:"예) name@company.com",
+    { key:"email",    label:"이메일",           type:"email", required:true, maxlength:200, autocomplete:"email", placeholder:"예) name@company.com",
       validate:function(v){
         if(!v) return "이메일을 입력해 주세요.";
         return EMAIL_RE.test(v) ? "" : "이메일 형식을 확인해 주세요. 예) name@company.com";
       } },
     { key:"quantity", label:"희망 진행 수량",    type:"select", required:true, options:QUANTITY_OPTIONS,
       validate:function(v){ return v ? "" : "희망 진행 수량을 선택해 주세요."; } },
-    { key:"message",  label:"문의 내용",         type:"textarea", required:false, placeholder:"희망 플랫폼, 제품명, 예산, 진행 일정 등 자유롭게 작성해 주세요." }
+    { key:"message",  label:"문의 내용",         type:"textarea", required:false, maxlength:3000, placeholder:"희망 플랫폼, 제품명, 예산, 진행 일정 등 자유롭게 작성해 주세요." }
   ];
 
   var HOME_URL = "index.html";
@@ -58,7 +59,7 @@
 
   function fieldHtml(f){
     var id = "qf-" + f.key;
-    var attrs = 'id="' + id + '" name="' + f.key + '" class="qf-input" aria-describedby="' + id + '-err"' + (f.required ? ' aria-required="true"' : '');
+    var attrs = 'id="' + id + '" name="' + f.key + '" class="qf-input" aria-describedby="' + id + '-err"' + (f.required ? ' aria-required="true"' : '') + (f.maxlength ? ' maxlength="' + f.maxlength + '"' : '');
     var control;
     if(f.type === "select"){
       control = '<select ' + attrs + '><option value="">선택해 주세요</option>' +
@@ -110,6 +111,7 @@
         '<p class="qf-lead">간단한 정보만 남겨주시면 담당자가 상담을 도와드립니다.</p>' +
         FIELDS.map(fieldHtml).join("") +
         CONSENT_HTML +
+        '<div class="qf-hp" aria-hidden="true"><label for="qf-website">웹사이트</label><input type="text" id="qf-website" name="website" tabindex="-1" autocomplete="off" aria-hidden="true"></div>' +
         '<button type="submit" class="btn btn-blue qf-submit">견적 문의 하기</button>' +
         '<p class="qf-status" id="qf-status" role="alert"></p>' +
       '</form>' +
@@ -131,6 +133,7 @@
   var messageEl = dialog.querySelector("#qf-message");
   var prefilled = "";
   var finished = false;
+  var source = IS_LANDING ? "index" : "tool";
 
   function setError(id, msg){
     var el = dialog.querySelector("#" + id);
@@ -170,23 +173,24 @@
   }
 
   function buildPayload(){
-    var contact = {};
-    FIELDS.forEach(function(f){ contact[f.key] = dialog.querySelector("#qf-" + f.key).value.trim(); });
-    contact.consent = true;
-    var payload = { contact:contact, pageUrl:window.location.href, timestamp:new Date().toISOString() };
-    if(typeof window.encluQuoteContext === "function") payload.selection = window.encluQuoteContext();
+    var payload = {};
+    FIELDS.forEach(function(f){ payload[f.key] = dialog.querySelector("#qf-" + f.key).value.trim(); });
+    payload.consent = dialog.querySelector("#qf-consent").checked;
+    payload.source = source;
+    payload.website = dialog.querySelector("#qf-website").value;
+    if(typeof window.encluQuoteContext === "function") payload.context = window.encluQuoteContext();
     return payload;
   }
 
   function buildMailto(payload){
-    var subject = "[일본 시딩 견적 문의] " + payload.contact.company;
-    var lines = FIELDS.map(function(f){ return f.label + ": " + (payload.contact[f.key] || "-"); });
+    var subject = "[일본 시딩 견적 문의] " + payload.company;
+    var lines = FIELDS.map(function(f){ return f.label + ": " + (payload[f.key] || "-"); });
     lines.push("개인정보 수집·이용 동의: 동의함");
-    if(payload.selection){
+    if(payload.context){
       lines.push("", "=== 예상 실적 확인에서 선택한 조건 ===");
-      Object.keys(CONTEXT_LABELS).forEach(function(k){ lines.push(CONTEXT_LABELS[k] + ": " + payload.selection[k]); });
+      Object.keys(CONTEXT_LABELS).forEach(function(k){ lines.push(CONTEXT_LABELS[k] + ": " + payload.context[k]); });
     }
-    lines.push("", "페이지: " + payload.pageUrl, "요청 시각: " + payload.timestamp);
+    lines.push("", "페이지: " + window.location.href, "요청 시각: " + new Date().toISOString());
     return "mailto:" + CONSULT_EMAIL + "?subject=" + encodeURIComponent(subject) + "&body=" + encodeURIComponent(lines.join("\n"));
   }
 
@@ -211,28 +215,61 @@
     if(firstInvalid){ firstInvalid.focus(); return; }
 
     var payload = buildPayload();
-    if(SUBMIT_ENDPOINT){
-      submitBtn.disabled = true;
-      submitBtn.textContent = "전송 중…";
-      fetch(SUBMIT_ENDPOINT, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload)
-      }).then(function(res){
-        if(!res.ok) throw new Error("bad status");
-        showSuccess("문의가 접수되었습니다", "담당자가 확인 후 입력하신 연락처로 연락드립니다.");
-      }).catch(function(){
-        submitBtn.disabled = false;
-        submitBtn.textContent = "견적 문의 하기";
-        statusEl.textContent = "전송에 실패했습니다. 잠시 후 다시 시도해 주세요.";
-      });
-    } else {
+    if(!HAS_API){
       // mailto는 메일 앱을 여는 것까지만 하므로, 접수 완료로 안내하지 않습니다.
       var mailto = buildMailto(payload);
       window.location.href = mailto;
       showSuccess("메일 앱에서 전송을 완료해 주세요", "작성하신 내용을 메일에 옮겨 두었습니다. 메일 앱에서 보내기를 누르면 문의가 접수됩니다.", mailto);
+      return;
     }
+
+    submitBtn.disabled = true;
+    submitBtn.textContent = "전송 중…";
+    fetch(SUBMIT_ENDPOINT, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload)
+    }).then(function(res){
+      if(res.ok){
+        showSuccess("견적 문의가 접수되었습니다", "담당자가 확인 후 영업일 기준 1~2일 내 회신드립니다.");
+        return;
+      }
+      enableSubmit();
+      if(res.status >= 500){ showMailFallback(payload); return; }
+      if(res.status === 429){ statusEl.textContent = "잠시 후 다시 시도해 주세요."; return; }
+      return res.json().catch(function(){ return {}; }).then(function(body){
+        showServerErrors(res.status === 400 ? body.fields : null);
+      });
+    }).catch(function(){
+      enableSubmit();
+      showMailFallback(payload);
+    });
   });
+
+  function enableSubmit(){
+    submitBtn.disabled = false;
+    submitBtn.textContent = "견적 문의 하기";
+  }
+
+  function showMailFallback(payload){
+    var link = document.createElement("a");
+    link.href = buildMailto(payload);
+    link.textContent = "메일 앱으로 보내기";
+    statusEl.textContent = "전송에 실패했습니다. ";
+    statusEl.appendChild(link);
+  }
+
+  // 서버가 돌려준 항목별 오류를 폼의 오류 자리에 표시합니다.
+  function showServerErrors(fields){
+    var firstInvalid = null;
+    FIELDS.map(function(f){ return f.key; }).concat("consent").forEach(function(key){
+      if(!fields || !fields[key]) return;
+      setError("qf-" + key, String(fields[key]));
+      if(!firstInvalid) firstInvalid = dialog.querySelector("#qf-" + key);
+    });
+    if(firstInvalid) firstInvalid.focus();
+    else statusEl.textContent = "전송하지 못했습니다. 입력 내용을 확인한 뒤 다시 시도해 주세요.";
+  }
 
   // 입력을 고치는 즉시 해당 항목의 오류를 지웁니다.
   function clearOnEdit(e){
@@ -289,6 +326,7 @@
   function open(opts, resume){
     goTop = false;
     if(finished) resetForm();
+    source = (opts && opts.source) || (IS_LANDING ? "index" : "tool");
     var message = opts && opts.message;
     // 사용자가 직접 쓴 문의 내용은 덮어쓰지 않습니다.
     if(message && (!messageEl.value.trim() || messageEl.value === prefilled)){
@@ -352,7 +390,7 @@
     var opener = e.target.closest && e.target.closest("[data-open-quote],[data-open-consult]");
     if(!opener) return;
     e.preventDefault();
-    open({ message: opener.getAttribute("data-quote-message") || "" });
+    open({ message: opener.getAttribute("data-quote-message") || "", source: opener.getAttribute("data-quote-source") || "" });
   });
 
   function openFromUrl(){

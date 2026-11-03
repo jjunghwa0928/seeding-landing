@@ -60,6 +60,8 @@ textarea.qf-input{resize:vertical;min-height:96px;}
 .qf-submit.btn:disabled{opacity:0.5;cursor:not-allowed;}
 .qf-status{margin:12px 0 0;font-size:14px;text-align:center;color:#d70015;}
 .qf-status:empty{display:none;}
+.qf-status a{color:inherit;text-decoration:underline;text-underline-offset:2px;}
+.qf-hp{position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden;}
 
 .qf-success{text-align:center;padding:24px 0 8px;}
 .qf-success[hidden],.qf-form[hidden]{display:none;}
