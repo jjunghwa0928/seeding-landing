@@ -464,6 +464,42 @@
   .sec-head{margin-bottom:56px;}
   @media (max-width:734px){ .sec-head{margin-bottom:36px;} }
 
+  /* ---------- Reels strip (cards baked by scripts/bake_reels.py) ---------- */
+  /* Scrolls natively until the script below takes over (.is-live), so the
+     strip stays usable without JS. */
+  section.reels{padding-bottom:0;}
+  .reels[hidden]{display:none;}
+  .reels .sec-head{margin-bottom:20px;}
+  .reels-bar{display:flex;justify-content:flex-end;margin-bottom:16px;}
+  .reels-toggle{
+    width:44px;height:44px;border-radius:50%;border:1px solid var(--hairline);background:var(--white);color:var(--ink);
+    display:flex;align-items:center;justify-content:center;
+    transition:border-color var(--dur-2) var(--ease);
+  }
+  .reels-toggle:hover{border-color:var(--ink);}
+  .reels-toggle svg{width:16px;height:16px;fill:currentColor;display:block;}
+  .reels-toggle .icon-play{display:none;}
+  .reels-toggle[data-state="paused"] .icon-play{display:block;}
+  .reels-toggle[data-state="paused"] .icon-pause{display:none;}
+  .reels-toggle:not(.is-ready){visibility:hidden;}
+  .reels-viewport{overflow-x:auto;scrollbar-width:none;touch-action:pan-x pan-y;}
+  .reels-viewport::-webkit-scrollbar{display:none;}
+  .reels-viewport.is-live{overflow:hidden;touch-action:pan-y;cursor:grab;user-select:none;-webkit-user-select:none;}
+  .reels-viewport.is-dragging{cursor:grabbing;}
+  .reels-viewport:focus-visible{outline-offset:-2px;}
+  .reels-track{display:flex;gap:16px;width:max-content;will-change:transform;}
+  .reel-card{
+    flex:0 0 auto;display:block;width:256px;aspect-ratio:9/16;overflow:hidden;
+    border-radius:var(--radius);background:var(--parchment);
+  }
+  .reel-card video{width:100%;height:100%;object-fit:cover;pointer-events:none;transition:transform var(--dur-3) var(--ease);}
+  @media (hover:hover){ .reel-card:hover video{transform:scale(1.03);} }
+  @media (max-width:734px){
+    .reels-track{gap:12px;}
+    .reel-card{width:42vw;}
+  }
+  @media (prefers-reduced-motion:reduce){ .reel-card video{transition:none;} .reel-card:hover video{transform:none;} }
+
   /* ---------- Gallery / reviews ---------- */
   /* Sticky, scroll-spy category bar (user: "카테고리 버튼을 누르려면 다시
      올려야하는 불편함이 있어 이걸 개선해줘"). It is a normal child near the
@@ -936,6 +972,36 @@
   <a href="#faq"><span>자주 묻는 질문</span></a>
   <a href="#handoff"><span>예상 실적 · 문의</span></a>
 </nav>
+
+<!-- ===================== REELS STRIP ===================== -->
+<section id="reels" class="reels on-light">
+  <div class="wrap sec-head eyebrow-free reveal">
+    <h2 class="headline-sm">숏폼 리뷰</h2>
+    <p class="subhead">일본 인플루언서가 직접 찍어 올린 릴스입니다.</p>
+  </div>
+  <div class="wrap-wide reels-bar">
+    <button class="reels-toggle" id="reelsToggle" type="button" aria-label="릴스 일시정지" data-state="playing">
+      <svg class="icon-pause" viewBox="0 0 16 16" aria-hidden="true"><path d="M3 2h3.5v12H3zM9.5 2H13v12H9.5z"/></svg>
+      <svg class="icon-play" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 2l10 6-10 6z"/></svg>
+    </button>
+  </div>
+  <div class="reels-viewport" id="reelsViewport" tabindex="0" role="group" aria-label="숏폼 리뷰 영상, 좌우 방향키로 이동">
+    <div class="reels-track" id="reelsTrack">
+        <!-- reels:strip -->
+        <div class="reel-card" role="img" aria-label="숏폼 리뷰 영상 1"><video muted playsinline loop preload="metadata" poster="assets/reels/4adf54cb3a55.webp" src="assets/reels/4adf54cb3a55.mp4"></video></div>
+        <div class="reel-card" role="img" aria-label="숏폼 리뷰 영상 2"><video muted playsinline loop preload="metadata" poster="assets/reels/40b3f72f49e5.webp" src="assets/reels/40b3f72f49e5.mp4"></video></div>
+        <div class="reel-card" role="img" aria-label="숏폼 리뷰 영상 3"><video muted playsinline loop preload="metadata" poster="assets/reels/ffd59dcbf58b.webp" src="assets/reels/ffd59dcbf58b.mp4"></video></div>
+        <div class="reel-card" role="img" aria-label="숏폼 리뷰 영상 4"><video muted playsinline loop preload="metadata" poster="assets/reels/cbaa3fecf71f.webp" src="assets/reels/cbaa3fecf71f.mp4"></video></div>
+        <div class="reel-card" role="img" aria-label="숏폼 리뷰 영상 5"><video muted playsinline loop preload="none" poster="assets/reels/fcc98af649ca.webp" src="assets/reels/fcc98af649ca.mp4"></video></div>
+        <div class="reel-card" role="img" aria-label="숏폼 리뷰 영상 6"><video muted playsinline loop preload="none" poster="assets/reels/584df9539636.webp" src="assets/reels/584df9539636.mp4"></video></div>
+        <div class="reel-card" role="img" aria-label="숏폼 리뷰 영상 7"><video muted playsinline loop preload="none" poster="assets/reels/c42f42bd14be.webp" src="assets/reels/c42f42bd14be.mp4"></video></div>
+        <div class="reel-card" role="img" aria-label="숏폼 리뷰 영상 8"><video muted playsinline loop preload="none" poster="assets/reels/d58b1b670cbc.webp" src="assets/reels/d58b1b670cbc.mp4"></video></div>
+        <div class="reel-card" role="img" aria-label="숏폼 리뷰 영상 9"><video muted playsinline loop preload="none" poster="assets/reels/fe4cedbaaa01.webp" src="assets/reels/fe4cedbaaa01.mp4"></video></div>
+        <div class="reel-card" role="img" aria-label="숏폼 리뷰 영상 10"><video muted playsinline loop preload="none" poster="assets/reels/c51a17cf8989.webp" src="assets/reels/c51a17cf8989.mp4"></video></div>
+        <!-- /reels:strip -->
+    </div>
+  </div>
+</section>
 
 <!-- ===================== REVIEW GALLERY ===================== -->
 <section id="gallery" class="on-light">
@@ -1790,6 +1856,186 @@
       v.pause();
     });
   }
+})();
+</script>
+
+<!-- reels:js -->
+<script>
+(function(){
+  // Marquee over cards baked by scripts/bake_reels.py. Moving and playing are
+  // separate: hover/drag only hold the scroll, the toggle stops the videos too.
+  var section = document.getElementById('reels');
+  var viewport = document.getElementById('reelsViewport');
+  var track = document.getElementById('reelsTrack');
+  var toggle = document.getElementById('reelsToggle');
+  if(!section || section.hidden || !viewport || !track || !toggle) return;
+  var originals = Array.prototype.slice.call(track.children);
+  if(!originals.length) return;
+
+  var reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var SPEED = 32, DRAG_SLOP = 6, TOUCH_HOLD = 1500, KEY_STEP = 272;
+  var offset = 0, setWidth = 0, lastT = 0, rafId = 0;
+  var userPaused = reduced, hovering = false, focused = false, holdUntil = 0;
+  var stageVisible = false, drag = null, suppressClick = false;
+
+  function cloneSet(){
+    originals.forEach(function(card){
+      var c = card.cloneNode(true);
+      c.setAttribute('aria-hidden', 'true');
+      if(c.tagName === 'A') c.tabIndex = -1;
+      c.querySelector('video').preload = 'none';
+      track.appendChild(c);
+    });
+  }
+  // One extra set is only seamless if a set covers the viewport; few cards or
+  // ultrawide screens need more copies.
+  function measure(){
+    var keep = setWidth ? offset / setWidth : 0;
+    cloneSetsUntilFilled();
+    setWidth = track.children[originals.length].offsetLeft - track.children[0].offsetLeft;
+    offset = keep * setWidth;
+    render();
+  }
+  function cloneSetsUntilFilled(){
+    if(track.children.length === originals.length) cloneSet();
+    var one = track.children[originals.length].offsetLeft - track.children[0].offsetLeft;
+    while(track.children.length * one / originals.length < one + viewport.clientWidth) cloneSet();
+    observeVideos();
+  }
+  function render(){
+    if(setWidth) offset = ((offset % setWidth) + setWidth) % setWidth;
+    track.style.transform = 'translate3d(' + (-offset) + 'px,0,0)';
+  }
+
+  function tick(now){
+    rafId = requestAnimationFrame(tick);
+    var dt = Math.min(now - lastT, 100);
+    lastT = now;
+    if(reduced || userPaused || hovering || focused || drag || now < holdUntil || document.hidden) return;
+    offset += SPEED * dt / 1000;
+    render();
+  }
+  function setRunning(on){
+    if(on && !rafId && !reduced){ lastT = performance.now(); rafId = requestAnimationFrame(tick); }
+    else if(!on && rafId){ cancelAnimationFrame(rafId); rafId = 0; }
+  }
+
+  // The per-video observer is rooted on the strip, so it only sees sideways
+  // position; stageVisible covers the page scrolling the strip out of view.
+  var near = new WeakSet();
+  var videoIO = null;
+  function syncVideo(v){
+    v.muted = true;
+    if(stageVisible && !userPaused && !document.hidden && near.has(v)){
+      var p = v.play();
+      if(p && p.catch) p.catch(function(){});
+    } else if(!v.paused){
+      v.pause();
+    }
+  }
+  function syncVideos(){
+    track.querySelectorAll('video').forEach(syncVideo);
+  }
+  function observeVideos(){
+    if(!videoIO) return;
+    track.querySelectorAll('video').forEach(function(v){ videoIO.observe(v); });
+  }
+
+  function setPaused(paused){
+    userPaused = paused;
+    toggle.setAttribute('data-state', paused ? 'paused' : 'playing');
+    toggle.setAttribute('aria-label', paused ? '릴스 재생' : '릴스 일시정지');
+    syncVideos();
+  }
+
+  viewport.classList.add('is-live');
+  toggle.classList.add('is-ready');
+  toggle.addEventListener('click', function(){ setPaused(!userPaused); });
+
+  viewport.addEventListener('pointerenter', function(e){ if(e.pointerType === 'mouse') hovering = true; });
+  viewport.addEventListener('pointerleave', function(e){ if(e.pointerType === 'mouse') hovering = false; });
+  viewport.addEventListener('pointerdown', function(e){
+    if(e.button) return;
+    drag = {id:e.pointerId, x:e.clientX, start:offset, moved:false, type:e.pointerType};
+    suppressClick = false;
+  });
+  viewport.addEventListener('pointermove', function(e){
+    if(!drag || e.pointerId !== drag.id) return;
+    var dx = e.clientX - drag.x;
+    if(!drag.moved && Math.abs(dx) < DRAG_SLOP) return;
+    if(!drag.moved){
+      // Capture only once it is a real drag: capturing on pointerdown
+      // retargets the click and would break plain taps on card links.
+      drag.moved = true;
+      viewport.setPointerCapture(e.pointerId);
+      viewport.classList.add('is-dragging');
+    }
+    offset = drag.start - dx;
+    render();
+  });
+  function endDrag(e){
+    if(!drag || e.pointerId !== drag.id) return;
+    suppressClick = drag.moved;
+    if(drag.type !== 'mouse') holdUntil = performance.now() + TOUCH_HOLD;
+    viewport.classList.remove('is-dragging');
+    drag = null;
+  }
+  viewport.addEventListener('pointerup', endDrag);
+  viewport.addEventListener('pointercancel', endDrag);
+  viewport.addEventListener('click', function(e){
+    if(suppressClick){ e.preventDefault(); e.stopPropagation(); suppressClick = false; }
+  }, true);
+  viewport.addEventListener('dragstart', function(e){ e.preventDefault(); });
+
+  // Trackpad sideways swipe scrolls the strip; vertical wheel stays page scroll.
+  viewport.addEventListener('wheel', function(e){
+    if(Math.abs(e.deltaX) <= Math.abs(e.deltaY)) return;
+    e.preventDefault();
+    offset += e.deltaX;
+    holdUntil = performance.now() + TOUCH_HOLD;
+    render();
+  }, {passive:false});
+
+  viewport.addEventListener('keydown', function(e){
+    if(e.key !== 'ArrowRight' && e.key !== 'ArrowLeft') return;
+    e.preventDefault();
+    offset += e.key === 'ArrowRight' ? KEY_STEP : -KEY_STEP;
+    render();
+  });
+  // Tabbing to a card: overflow:hidden still lets the browser scroll it into
+  // view, so undo that and bring the card in via the transform instead.
+  // Keyboard focus only: a mouse press also focuses, and must not hold the scroll.
+  viewport.addEventListener('scroll', function(){ viewport.scrollLeft = 0; });
+  viewport.addEventListener('focusin', function(e){
+    if(!e.target.matches(':focus-visible')) return;
+    focused = true;
+    if(e.target !== viewport){
+      offset = e.target.offsetLeft - track.children[0].offsetLeft;
+      render();
+    }
+  });
+  viewport.addEventListener('focusout', function(){ focused = false; });
+
+  if('IntersectionObserver' in window){
+    videoIO = new IntersectionObserver(function(entries){
+      entries.forEach(function(en){
+        if(en.isIntersecting) near.add(en.target); else near.delete(en.target);
+        syncVideo(en.target);
+      });
+    }, {root:viewport, rootMargin:'0px 200px', threshold:0});
+    new IntersectionObserver(function(entries){
+      stageVisible = entries[entries.length - 1].isIntersecting;
+      setRunning(stageVisible);
+      syncVideos();
+    }, {threshold:0}).observe(viewport);
+  } else {
+    setRunning(true);
+  }
+
+  measure();
+  setPaused(userPaused);
+  window.addEventListener('resize', measure);
+  document.addEventListener('visibilitychange', syncVideos);
 })();
 </script>
 
