@@ -5,7 +5,7 @@ Why: raw phone/Instagram exports are 10-100MB each. Muted 720p-ish H.264 with
 faststart plus a small WebP poster keeps the strip light on GitHub Pages.
 
 Usage: python3 scripts/bake_reels.py [--src assets/reels/src] [--links links.txt]
-Output: assets/reels/<sha1(content)[:12]>.mp4 + .webp, and the region between
+Output: assets/reels/<sha1(SCALE + content)[:12]>.mp4 + .webp, and the region between
 <!-- reels:strip --> and <!-- /reels:strip --> in index.html rewritten.
 Re-runs skip outputs already present. 0 videos empties the region and hides
 <section id="reels">. A missing --src directory is an error, not 0 videos: src is
@@ -16,6 +16,8 @@ import argparse, functools, hashlib, html, os, re, subprocess, sys
 EXTS = (".mp4", ".mov", ".m4v", ".webm")
 MAX_SECONDS = 30
 POSTER_AT = 1.0
+# Fit inside 720x1280 without upscaling; even dimensions because yuv420p requires them.
+SCALE = "scale='min(720,iw)':'min(1280,ih)':force_original_aspect_ratio=decrease:force_divisible_by=2"
 EAGER_CARDS = 4  # cards past this get preload="none"
 STRIP_RE = re.compile(r'<!-- reels:strip -->.*?<!-- /reels:strip -->', re.S)
 SECTION_RE = re.compile(r'<section id="reels"[^>]*>')
@@ -29,13 +31,17 @@ def run(cmd):
     return p.stdout.strip()
 
 
+def on_path(name):
+    for d in os.environ.get("PATH", "").split(os.pathsep):
+        exe = os.path.join(d, name)
+        if os.path.isfile(exe) and os.access(exe, os.X_OK):
+            yield exe
+
+
 @functools.lru_cache(maxsize=None)
 def ffmpeg_with(encoder):
     """First ffmpeg on PATH that has the encoder: some builds (e.g. Homebrew's) lack libwebp."""
-    for d in os.environ.get("PATH", "").split(os.pathsep):
-        exe = os.path.join(d, "ffmpeg")
-        if not os.access(exe, os.X_OK):
-            continue
+    for exe in on_path("ffmpeg"):
         p = subprocess.run([exe, "-hide_banner", "-encoders"], stdout=subprocess.PIPE,
                            stderr=subprocess.DEVNULL, universal_newlines=True)
         if f" {encoder} " in p.stdout:
@@ -43,8 +49,17 @@ def ffmpeg_with(encoder):
     sys.exit(f"no ffmpeg on PATH has the {encoder} encoder")
 
 
+@functools.lru_cache(maxsize=None)
+def ffprobe_exe():
+    for exe in on_path("ffprobe"):
+        return exe
+    sys.exit("ffprobe not found on PATH (it ships with ffmpeg)")
+
+
 def content_key(path):
-    h = hashlib.sha1()
+    # SCALE is hashed in too: outputs are skipped by name, so a sizing change
+    # must produce new names or it would never reach already-baked videos.
+    h = hashlib.sha1(SCALE.encode())
     with open(path, "rb") as f:
         for chunk in iter(lambda: f.read(1024 * 1024), b""):
             h.update(chunk)
@@ -52,7 +67,7 @@ def content_key(path):
 
 
 def duration(path):
-    out = run(["ffprobe", "-v", "error", "-select_streams", "v:0", "-show_entries", "format=duration",
+    out = run([ffprobe_exe(), "-v", "error", "-select_streams", "v:0", "-show_entries", "format=duration",
                "-of", "default=noprint_wrappers=1:nokey=1", path])
     try:
         return float(out)
@@ -61,12 +76,11 @@ def duration(path):
 
 
 def transcode(src, dst):
-    # trunc(.../2)*2: an odd source height would otherwise be rejected by yuv420p.
     # Output goes to a temp name first so an interrupted run is never skipped as done.
     tmp = dst + ".tmp.mp4"
     run([ffmpeg_with("libx264"), "-y", "-v", "error", "-i", src, "-t", str(MAX_SECONDS),
          "-map", "0:v:0", "-an", "-sn", "-dn", "-map_metadata", "-1",
-         "-vf", "scale=-2:'trunc(min(1280,ih)/2)*2'",
+         "-vf", SCALE,
          "-c:v", "libx264", "-profile:v", "high", "-pix_fmt", "yuv420p",
          "-crf", "28", "-preset", "slow", "-movflags", "+faststart", tmp])
     os.replace(tmp, dst)
@@ -165,7 +179,9 @@ def main():
     orphans = sorted(n for n in os.listdir(a.out)
                      if n.endswith((".mp4", ".webp")) and os.path.splitext(n)[0] not in stems)
     if orphans:
-        print(f"note: {len(orphans)} files in {a.out} are no longer used; git rm them if replaced for good")
+        print(f"note: {len(orphans)} files in {a.out} are no longer used; git rm them if replaced for good:")
+        for n in orphans:
+            print(f"  {n}")
     print(f"reels: {len(cards)} videos, {total / 1024 / 1024:.1f} MB ({done} transcoded, {skipped} skipped)")
 
 

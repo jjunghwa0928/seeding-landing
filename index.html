@@ -988,16 +988,16 @@
   <div class="reels-viewport" id="reelsViewport" tabindex="0" role="group" aria-label="숏폼 리뷰 영상, 좌우 방향키로 이동">
     <div class="reels-track" id="reelsTrack">
         <!-- reels:strip -->
-        <div class="reel-card" role="img" aria-label="숏폼 리뷰 영상 1"><video muted playsinline loop preload="metadata" poster="assets/reels/4adf54cb3a55.webp" src="assets/reels/4adf54cb3a55.mp4"></video></div>
-        <div class="reel-card" role="img" aria-label="숏폼 리뷰 영상 2"><video muted playsinline loop preload="metadata" poster="assets/reels/40b3f72f49e5.webp" src="assets/reels/40b3f72f49e5.mp4"></video></div>
-        <div class="reel-card" role="img" aria-label="숏폼 리뷰 영상 3"><video muted playsinline loop preload="metadata" poster="assets/reels/ffd59dcbf58b.webp" src="assets/reels/ffd59dcbf58b.mp4"></video></div>
-        <div class="reel-card" role="img" aria-label="숏폼 리뷰 영상 4"><video muted playsinline loop preload="metadata" poster="assets/reels/cbaa3fecf71f.webp" src="assets/reels/cbaa3fecf71f.mp4"></video></div>
-        <div class="reel-card" role="img" aria-label="숏폼 리뷰 영상 5"><video muted playsinline loop preload="none" poster="assets/reels/fcc98af649ca.webp" src="assets/reels/fcc98af649ca.mp4"></video></div>
-        <div class="reel-card" role="img" aria-label="숏폼 리뷰 영상 6"><video muted playsinline loop preload="none" poster="assets/reels/584df9539636.webp" src="assets/reels/584df9539636.mp4"></video></div>
-        <div class="reel-card" role="img" aria-label="숏폼 리뷰 영상 7"><video muted playsinline loop preload="none" poster="assets/reels/c42f42bd14be.webp" src="assets/reels/c42f42bd14be.mp4"></video></div>
-        <div class="reel-card" role="img" aria-label="숏폼 리뷰 영상 8"><video muted playsinline loop preload="none" poster="assets/reels/d58b1b670cbc.webp" src="assets/reels/d58b1b670cbc.mp4"></video></div>
-        <div class="reel-card" role="img" aria-label="숏폼 리뷰 영상 9"><video muted playsinline loop preload="none" poster="assets/reels/fe4cedbaaa01.webp" src="assets/reels/fe4cedbaaa01.mp4"></video></div>
-        <div class="reel-card" role="img" aria-label="숏폼 리뷰 영상 10"><video muted playsinline loop preload="none" poster="assets/reels/c51a17cf8989.webp" src="assets/reels/c51a17cf8989.mp4"></video></div>
+        <div class="reel-card" role="img" aria-label="숏폼 리뷰 영상 1"><video muted playsinline loop preload="metadata" poster="assets/reels/d0b79c7b2fff.webp" src="assets/reels/d0b79c7b2fff.mp4"></video></div>
+        <div class="reel-card" role="img" aria-label="숏폼 리뷰 영상 2"><video muted playsinline loop preload="metadata" poster="assets/reels/36fbc558a15f.webp" src="assets/reels/36fbc558a15f.mp4"></video></div>
+        <div class="reel-card" role="img" aria-label="숏폼 리뷰 영상 3"><video muted playsinline loop preload="metadata" poster="assets/reels/1748a7b6cc73.webp" src="assets/reels/1748a7b6cc73.mp4"></video></div>
+        <div class="reel-card" role="img" aria-label="숏폼 리뷰 영상 4"><video muted playsinline loop preload="metadata" poster="assets/reels/7e1965a34f27.webp" src="assets/reels/7e1965a34f27.mp4"></video></div>
+        <div class="reel-card" role="img" aria-label="숏폼 리뷰 영상 5"><video muted playsinline loop preload="none" poster="assets/reels/4b1344ef5b10.webp" src="assets/reels/4b1344ef5b10.mp4"></video></div>
+        <div class="reel-card" role="img" aria-label="숏폼 리뷰 영상 6"><video muted playsinline loop preload="none" poster="assets/reels/fe9c42b70038.webp" src="assets/reels/fe9c42b70038.mp4"></video></div>
+        <div class="reel-card" role="img" aria-label="숏폼 리뷰 영상 7"><video muted playsinline loop preload="none" poster="assets/reels/7f4e6d5e5edb.webp" src="assets/reels/7f4e6d5e5edb.mp4"></video></div>
+        <div class="reel-card" role="img" aria-label="숏폼 리뷰 영상 8"><video muted playsinline loop preload="none" poster="assets/reels/b7f51c422d83.webp" src="assets/reels/b7f51c422d83.mp4"></video></div>
+        <div class="reel-card" role="img" aria-label="숏폼 리뷰 영상 9"><video muted playsinline loop preload="none" poster="assets/reels/8366e706dce0.webp" src="assets/reels/8366e706dce0.mp4"></video></div>
+        <div class="reel-card" role="img" aria-label="숏폼 리뷰 영상 10"><video muted playsinline loop preload="none" poster="assets/reels/5ae3aabdc180.webp" src="assets/reels/5ae3aabdc180.mp4"></video></div>
         <!-- /reels:strip -->
     </div>
   </div>
@@ -1883,7 +1883,11 @@
       var c = card.cloneNode(true);
       c.setAttribute('aria-hidden', 'true');
       if(c.tagName === 'A') c.tabIndex = -1;
-      c.querySelector('video').preload = 'none';
+      // No src until it is picked to play, so a clone can never fetch video.
+      var v = c.querySelector('video');
+      v.preload = 'none';
+      v.setAttribute('data-src', v.getAttribute('src'));
+      v.removeAttribute('src');
       track.appendChild(c);
     });
   }
@@ -1922,19 +1926,30 @@
 
   // The per-video observer is rooted on the strip, so it only sees sideways
   // position; stageVisible covers the page scrolling the strip out of view.
-  var near = new WeakSet();
+  // Only the most visible cards play, capped so phones decode 2 videos at most.
+  var visibility = new WeakMap();
   var videoIO = null;
-  function syncVideo(v){
+  var mobile = window.matchMedia('(max-width:734px)');
+  function startVideo(v){
+    if(!v.getAttribute('src')) v.src = v.getAttribute('data-src');
     v.muted = true;
-    if(stageVisible && !userPaused && !document.hidden && near.has(v)){
-      var p = v.play();
-      if(p && p.catch) p.catch(function(){});
-    } else if(!v.paused){
-      v.pause();
-    }
+    var p = v.play();
+    if(p && p.catch) p.catch(function(){});
   }
   function syncVideos(){
-    track.querySelectorAll('video').forEach(syncVideo);
+    var all = Array.prototype.slice.call(track.querySelectorAll('video'));
+    var chosen = [];
+    if(stageVisible && !userPaused && !document.hidden){
+      // Ties keep what is already playing, then DOM order, so equally visible
+      // cards don't trade places every time the marquee crosses a threshold.
+      chosen = all.filter(function(v){ return visibility.get(v) > 0; }).sort(function(a, b){
+        return (visibility.get(b) - visibility.get(a)) || (a.paused - b.paused);
+      }).slice(0, mobile.matches ? 2 : 4);
+    }
+    all.forEach(function(v){
+      if(chosen.indexOf(v) === -1){ if(!v.paused) v.pause(); }
+      else if(v.paused) startVideo(v);
+    });
   }
   function observeVideos(){
     if(!videoIO) return;
@@ -2018,11 +2033,10 @@
 
   if('IntersectionObserver' in window){
     videoIO = new IntersectionObserver(function(entries){
-      entries.forEach(function(en){
-        if(en.isIntersecting) near.add(en.target); else near.delete(en.target);
-        syncVideo(en.target);
-      });
-    }, {root:viewport, rootMargin:'0px 200px', threshold:0});
+      // Quarter steps; under 1/8 visible rounds to 0 and a sliver never plays.
+      entries.forEach(function(en){ visibility.set(en.target, Math.round(en.intersectionRatio * 4)); });
+      syncVideos();
+    }, {root:viewport, threshold:[0, 0.125, 0.25, 0.5, 0.75, 0.99]});
     new IntersectionObserver(function(entries){
       stageVisible = entries[entries.length - 1].isIntersecting;
       setRunning(stageVisible);
@@ -2034,7 +2048,7 @@
 
   measure();
   setPaused(userPaused);
-  window.addEventListener('resize', measure);
+  window.addEventListener('resize', function(){ measure(); syncVideos(); });
   document.addEventListener('visibilitychange', syncVideos);
 })();
 </script>
