@@ -2,3 +2,5 @@ _*
 *.png
 *.log
 __pycache__/
+assets/reels/src/
+assets/IMG/brands/src/

@@ -2,7 +2,7 @@
 
 사이트: https://jjunghwa0928.github.io/seeding-landing/
 언어: 한국어
-최종 갱신: 2026-10-27
+최종 갱신: 2026-11-03
 
 ## 회사 개요
 
@@ -10,9 +10,9 @@
 
 - 진행 지역: 일본(현지 법인 직영), 미국, 베트남, 말레이시아
 - 수출바우처: 3년 연속 수출바우처 공식 수행기관. 수출바우처 예산으로 바로 집행할 수 있으며, 적용하면 브랜드의 비용 부담이 낮아집니다.
-- 실적: 누적 수출 실적 $2M+, 함께한 K-뷰티 브랜드 21개
+- 실적: 누적 수출 실적 $2M+, 함께한 K-뷰티 브랜드 75개
 - 커머스 경험: 큐텐(Qoo10), 라쿠텐(Rakuten), 아마존(Amazon), 바이마(BUYMA) 운영대행과 유통을 직접 해왔습니다. 시딩만 하는 곳이 아니라 일본에서 파는 것까지 해본 팀입니다.
-- 함께한 브랜드(21개): ABIB, Ariul, Begins, CAELA, CELLADIX, Chasin Rabbits, Dr.Choi Solution, Dr.Different, Dr.Nineteen, FIVEVIBE, INGA, isoi, KUNDAL, Lanbelle, MASTINA, NEEDLY, NM, Papa Recipe, Real Barrier, SOME BY MI, TOOZ
+- 함께한 브랜드(75개): Tooq, FIVEVIBE, CAELA, SOME BY MI, Dr.nineteen, Realbarrier, CHASIN'RABBITS, Abib, Lanbelle, Ariul, BeginS, mastina, Celladix, Dr.Different, Dr.Choi's Solution, papa recipe, KUNDAL, NEEDLY, NAMING, INGA, ISOI, coralhaze, HOLIKA HOLIKA, be aube, YNM, Ph.Hubby, SOO ADOR, Zipiel, MEDI SECTION NO, Dr.Reju-All, WellDerma, B.ROCHE, Kuvings, ILENOL, NEAR, THE A'VVE, DUFT&DOFT, YOUTHDESK, KEEPINTOUCH, Maybena, MuCent, bravity, Torhop, ROVECTIN, Kwangdong, SNP, BanoBagi, ZEROID, LAIEL, reblocell, KOCOSTAR, Dr's Touch, Bremen, JUNGSAEMMOOL, It'SSKIN, BERRISOM, DR.PEPTI, nauet, Maeil, nobev, NANO RECIPE, VIDIVICI, sensel, derDM, SHURINK, NOUUS, KERB ALIVE, onslo, MUMCHIT, BITE ME, PROTEEONE, Feelody, MARINECOS, unidit, PURUNONG
 
 ## 서비스: 인플루언서 시딩
 
@@ -21,7 +21,7 @@
 광고 집행과 비교하면:
 - 광고는 CPM이 매년 오르고, 소비자는 광고를 신뢰하지 않으며, 캠페인이 끝나면 콘텐츠도 사라지고, 번역투 카피는 현지어로 읽히지 않습니다.
 - 시딩은 제작비 한 번으로 자산이 남고, 현지 크리에이터의 말로 신뢰를 얻으며, 게시물 링크와 2차 활용권이 브랜드 자산으로 남고, 처음부터 현지 언어로 제작됩니다.
-- 페이지에 제시된 시딩 지표: 평균 참여율 3.2%, 구매 전환 기여 87%, 캠페인 완료 기간 4주, 통합 브랜드 21개.
+- 페이지에 제시된 시딩 지표: 평균 참여율 3.2%, 구매 전환 기여 87%, 캠페인 완료 기간 4주, 통합 브랜드 75개.
 
 운영 방식:
 - Matching: 카테고리별 실적 데이터로 브랜드에 맞는 크리에이터를 엔클루가 직접 찾아 섭외합니다. 리스트를 주고 고르라고 하지 않습니다.
