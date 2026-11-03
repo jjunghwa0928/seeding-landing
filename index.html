@@ -490,8 +490,9 @@
   .reel-card video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;pointer-events:none;transition:transform var(--dur-3) var(--ease);}
   @media (hover:hover){ .reel-card:hover video{transform:scale(1.03);} }
   @media (min-width:768px){
-    .reels-viewport{max-width:980px;margin:0 auto;padding:0 22px;}
-    .reels-track{display:grid;grid-template-columns:repeat(5,1fr);gap:20px;}
+    .reels-bar{max-width:1440px;}
+    .reels-viewport{max-width:1440px;margin:0 auto;padding:0 22px;}
+    .reels-track{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;}
     .reel-card.is-clone{display:none;}
   }
   @media (max-width:767px){
