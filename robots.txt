@@ -1,4 +1,4 @@
-# ENCLU — K-뷰티 인플루언서 시딩 (https://jjunghwa0928.github.io/seeding-landing/)
+# ENCLU — K-뷰티 인플루언서 시딩 (https://influencer.enclu.com/)
 # All crawlers welcome. AI / answer-engine crawlers are explicitly allowed.
 
 User-agent: *
@@ -46,4 +46,4 @@ Allow: /
 User-agent: Yeti
 Allow: /
 
-Sitemap: https://jjunghwa0928.github.io/seeding-landing/sitemap.xml
+Sitemap: https://influencer.enclu.com/sitemap.xml
