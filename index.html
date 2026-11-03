@@ -465,12 +465,14 @@
   @media (max-width:734px){ .sec-head{margin-bottom:36px;} }
 
   /* ---------- Reels strip (cards baked by scripts/bake_reels.py) ---------- */
-  /* Scrolls natively until the script below takes over (.is-live), so the
-     strip stays usable without JS. */
+  /* Desktop is a static 5x2 grid. Mobile is a 2-row strip that scrolls natively
+     until the script below takes over (.is-live), so it stays usable without JS.
+     The 768px split is shared with the script's matchMedia. */
   section.reels{padding-bottom:0;}
   .reels[hidden]{display:none;}
-  .reels .sec-head{margin-bottom:20px;}
+  .reels .sec-head{margin-bottom:32px;}
   .reels-bar{display:flex;justify-content:flex-end;margin-bottom:16px;}
+  .reels-bar[hidden]{display:none;}
   .reels-toggle{
     width:44px;height:44px;border-radius:50%;border:1px solid var(--hairline);background:var(--white);color:var(--ink);
     display:flex;align-items:center;justify-content:center;
@@ -481,22 +483,27 @@
   .reels-toggle .icon-play{display:none;}
   .reels-toggle[data-state="paused"] .icon-play{display:block;}
   .reels-toggle[data-state="paused"] .icon-pause{display:none;}
-  .reels-toggle:not(.is-ready){visibility:hidden;}
-  .reels-viewport{overflow-x:auto;scrollbar-width:none;touch-action:pan-x pan-y;}
-  .reels-viewport::-webkit-scrollbar{display:none;}
-  .reels-viewport.is-live{overflow:hidden;touch-action:pan-y;cursor:grab;user-select:none;-webkit-user-select:none;}
-  .reels-viewport.is-dragging{cursor:grabbing;}
-  .reels-viewport:focus-visible{outline-offset:-2px;}
-  .reels-track{display:flex;gap:16px;width:max-content;will-change:transform;}
   .reel-card{
-    flex:0 0 auto;display:block;width:256px;aspect-ratio:9/16;overflow:hidden;
+    position:relative;display:block;aspect-ratio:9/16;overflow:hidden;
     border-radius:var(--radius);background:var(--parchment);
   }
-  .reel-card video{width:100%;height:100%;object-fit:cover;pointer-events:none;transition:transform var(--dur-3) var(--ease);}
+  .reel-card video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;pointer-events:none;transition:transform var(--dur-3) var(--ease);}
   @media (hover:hover){ .reel-card:hover video{transform:scale(1.03);} }
-  @media (max-width:734px){
-    .reels-track{gap:12px;}
-    .reel-card{width:42vw;}
+  @media (min-width:768px){
+    .reels-viewport{max-width:980px;margin:0 auto;padding:0 22px;}
+    .reels-track{display:grid;grid-template-columns:repeat(5,1fr);gap:20px;}
+    .reel-card.is-clone{display:none;}
+  }
+  @media (max-width:767px){
+    .reels-viewport{overflow-x:auto;scrollbar-width:none;touch-action:pan-x pan-y;}
+    .reels-viewport::-webkit-scrollbar{display:none;}
+    .reels-viewport.is-live{overflow:hidden;touch-action:pan-y;cursor:grab;user-select:none;-webkit-user-select:none;}
+    .reels-viewport.is-dragging{cursor:grabbing;}
+    .reels-viewport:focus-visible{outline-offset:-2px;}
+    .reels-track{
+      display:grid;grid-auto-flow:column;grid-template-rows:repeat(2,auto);grid-auto-columns:38vw;gap:12px;
+      width:max-content;will-change:transform;
+    }
   }
   @media (prefers-reduced-motion:reduce){ .reel-card video{transition:none;} .reel-card:hover video{transform:none;} }
 
@@ -1004,25 +1011,25 @@
     <h2 class="headline-sm">숏폼 리뷰</h2>
     <p class="subhead">일본 인플루언서가 직접 찍어 올린 릴스입니다.</p>
   </div>
-  <div class="wrap-wide reels-bar">
+  <div class="wrap reels-bar" hidden>
     <button class="reels-toggle" id="reelsToggle" type="button" aria-label="릴스 일시정지" data-state="playing">
       <svg class="icon-pause" viewBox="0 0 16 16" aria-hidden="true"><path d="M3 2h3.5v12H3zM9.5 2H13v12H9.5z"/></svg>
       <svg class="icon-play" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 2l10 6-10 6z"/></svg>
     </button>
   </div>
-  <div class="reels-viewport" id="reelsViewport" tabindex="0" role="group" aria-label="숏폼 리뷰 영상, 좌우 방향키로 이동">
+  <div class="reels-viewport" id="reelsViewport" role="group" aria-label="숏폼 리뷰 영상">
     <div class="reels-track" id="reelsTrack">
         <!-- reels:strip -->
-        <div class="reel-card" role="img" aria-label="숏폼 리뷰 영상 1"><video muted playsinline loop preload="metadata" poster="assets/reels/d0b79c7b2fff.webp" src="assets/reels/d0b79c7b2fff.mp4"></video></div>
-        <div class="reel-card" role="img" aria-label="숏폼 리뷰 영상 2"><video muted playsinline loop preload="metadata" poster="assets/reels/36fbc558a15f.webp" src="assets/reels/36fbc558a15f.mp4"></video></div>
-        <div class="reel-card" role="img" aria-label="숏폼 리뷰 영상 3"><video muted playsinline loop preload="metadata" poster="assets/reels/1748a7b6cc73.webp" src="assets/reels/1748a7b6cc73.mp4"></video></div>
-        <div class="reel-card" role="img" aria-label="숏폼 리뷰 영상 4"><video muted playsinline loop preload="metadata" poster="assets/reels/7e1965a34f27.webp" src="assets/reels/7e1965a34f27.mp4"></video></div>
-        <div class="reel-card" role="img" aria-label="숏폼 리뷰 영상 5"><video muted playsinline loop preload="none" poster="assets/reels/4b1344ef5b10.webp" src="assets/reels/4b1344ef5b10.mp4"></video></div>
-        <div class="reel-card" role="img" aria-label="숏폼 리뷰 영상 6"><video muted playsinline loop preload="none" poster="assets/reels/fe9c42b70038.webp" src="assets/reels/fe9c42b70038.mp4"></video></div>
-        <div class="reel-card" role="img" aria-label="숏폼 리뷰 영상 7"><video muted playsinline loop preload="none" poster="assets/reels/7f4e6d5e5edb.webp" src="assets/reels/7f4e6d5e5edb.mp4"></video></div>
-        <div class="reel-card" role="img" aria-label="숏폼 리뷰 영상 8"><video muted playsinline loop preload="none" poster="assets/reels/b7f51c422d83.webp" src="assets/reels/b7f51c422d83.mp4"></video></div>
-        <div class="reel-card" role="img" aria-label="숏폼 리뷰 영상 9"><video muted playsinline loop preload="none" poster="assets/reels/8366e706dce0.webp" src="assets/reels/8366e706dce0.mp4"></video></div>
-        <div class="reel-card" role="img" aria-label="숏폼 리뷰 영상 10"><video muted playsinline loop preload="none" poster="assets/reels/5ae3aabdc180.webp" src="assets/reels/5ae3aabdc180.mp4"></video></div>
+        <div class="reel-card is-placeholder" aria-hidden="true"></div>
+        <div class="reel-card is-placeholder" aria-hidden="true"></div>
+        <div class="reel-card is-placeholder" aria-hidden="true"></div>
+        <div class="reel-card is-placeholder" aria-hidden="true"></div>
+        <div class="reel-card is-placeholder" aria-hidden="true"></div>
+        <div class="reel-card is-placeholder" aria-hidden="true"></div>
+        <div class="reel-card is-placeholder" aria-hidden="true"></div>
+        <div class="reel-card is-placeholder" aria-hidden="true"></div>
+        <div class="reel-card is-placeholder" aria-hidden="true"></div>
+        <div class="reel-card is-placeholder" aria-hidden="true"></div>
         <!-- /reels:strip -->
     </div>
   </div>
@@ -1887,8 +1894,10 @@
 <!-- reels:js -->
 <script>
 (function(){
-  // Marquee over cards baked by scripts/bake_reels.py. Moving and playing are
-  // separate: hover/drag only hold the scroll, the toggle stops the videos too.
+  // Cards are baked by scripts/bake_reels.py. Desktop is a static grid, so only
+  // playback runs there; the marquee, clones and drag are mobile only. Moving and
+  // playing are separate: hover/drag only hold the scroll, the toggle stops the
+  // videos too. Cards may be empty placeholders with no <video>.
   var section = document.getElementById('reels');
   var viewport = document.getElementById('reelsViewport');
   var track = document.getElementById('reelsTrack');
@@ -1898,7 +1907,13 @@
   if(!originals.length) return;
 
   var reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  var SPEED = 32, DRAG_SLOP = 6, TOUCH_HOLD = 1500, KEY_STEP = 272;
+  var mobile = window.matchMedia('(max-width:767px)');
+  var bar = toggle.parentNode;
+  var hasVideos = !!track.querySelector('video');
+  var SPEED = 32, DRAG_SLOP = 6, TOUCH_HOLD = 1500;
+  // Two rows flow by column, so an odd count swaps rows every pass: the pattern
+  // only repeats after two sets.
+  var period = originals.length % 2 ? originals.length * 2 : originals.length;
   var offset = 0, setWidth = 0, lastT = 0, rafId = 0;
   var userPaused = reduced, hovering = false, focused = false, holdUntil = 0;
   var stageVisible = false, drag = null, suppressClick = false;
@@ -1906,30 +1921,33 @@
   function cloneSet(){
     originals.forEach(function(card){
       var c = card.cloneNode(true);
+      c.classList.add('is-clone');
       c.setAttribute('aria-hidden', 'true');
       if(c.tagName === 'A') c.tabIndex = -1;
       // No src until it is picked to play, so a clone can never fetch video.
       var v = c.querySelector('video');
-      v.preload = 'none';
-      v.setAttribute('data-src', v.getAttribute('src'));
-      v.removeAttribute('src');
+      if(v){
+        v.preload = 'none';
+        v.setAttribute('data-src', v.getAttribute('src'));
+        v.removeAttribute('src');
+      }
       track.appendChild(c);
     });
   }
-  // One extra set is only seamless if a set covers the viewport; few cards or
-  // ultrawide screens need more copies.
+  // One extra set is only seamless if a set covers the viewport; few cards need
+  // more copies. The extra column of slack covers a half-filled last column.
   function measure(){
     var keep = setWidth ? offset / setWidth : 0;
     cloneSetsUntilFilled();
-    setWidth = track.children[originals.length].offsetLeft - track.children[0].offsetLeft;
+    setWidth = track.children[period].offsetLeft - track.children[0].offsetLeft;
     offset = keep * setWidth;
     render();
   }
   function cloneSetsUntilFilled(){
-    if(track.children.length === originals.length) cloneSet();
-    var one = track.children[originals.length].offsetLeft - track.children[0].offsetLeft;
-    while(track.children.length * one / originals.length < one + viewport.clientWidth) cloneSet();
-    observeVideos();
+    while(track.children.length <= period) cloneSet();
+    var one = track.children[period].offsetLeft - track.children[0].offsetLeft;
+    var column = one * 2 / period;
+    while(track.children.length * column / 2 < one + viewport.clientWidth + column) cloneSet();
   }
   function render(){
     if(setWidth) offset = ((offset % setWidth) + setWidth) % setWidth;
@@ -1949,12 +1967,11 @@
     else if(!on && rafId){ cancelAnimationFrame(rafId); rafId = 0; }
   }
 
-  // The per-video observer is rooted on the strip, so it only sees sideways
-  // position; stageVisible covers the page scrolling the strip out of view.
-  // Only the most visible cards play, capped so phones decode 2 videos at most.
+  // The per-video observer uses the page viewport, and its ratio also accounts
+  // for the strip's clipping. Desktop plays every visible card; phones play only
+  // the 2 most visible, so they never decode more than that.
   var visibility = new WeakMap();
   var videoIO = null;
-  var mobile = window.matchMedia('(max-width:734px)');
   function startVideo(v){
     if(!v.getAttribute('src')) v.src = v.getAttribute('data-src');
     v.muted = true;
@@ -1969,7 +1986,7 @@
       // cards don't trade places every time the marquee crosses a threshold.
       chosen = all.filter(function(v){ return visibility.get(v) > 0; }).sort(function(a, b){
         return (visibility.get(b) - visibility.get(a)) || (a.paused - b.paused);
-      }).slice(0, mobile.matches ? 2 : 4);
+      }).slice(0, mobile.matches ? 2 : Infinity);
     }
     all.forEach(function(v){
       if(chosen.indexOf(v) === -1){ if(!v.paused) v.pause(); }
@@ -1988,15 +2005,34 @@
     syncVideos();
   }
 
-  viewport.classList.add('is-live');
-  toggle.classList.add('is-ready');
+  // Runs on load and every resize, which also covers crossing the breakpoint.
+  function applyMode(){
+    var m = mobile.matches;
+    viewport.classList.toggle('is-live', m);
+    if(m){
+      viewport.setAttribute('tabindex', '0');
+      viewport.setAttribute('aria-label', '숏폼 리뷰 영상, 좌우 방향키로 이동');
+      measure();
+    } else {
+      viewport.removeAttribute('tabindex');
+      viewport.setAttribute('aria-label', '숏폼 리뷰 영상');
+      track.style.transform = '';
+      drag = null;
+    }
+    // The toggle stops the slide and the videos; with neither there is nothing to pause.
+    bar.hidden = !(hasVideos || (m && !reduced));
+    observeVideos();
+    setRunning(stageVisible && m);
+    syncVideos();
+  }
+
   toggle.addEventListener('click', function(){ setPaused(!userPaused); });
 
   viewport.addEventListener('pointerenter', function(e){ if(e.pointerType === 'mouse') hovering = true; });
   viewport.addEventListener('pointerleave', function(e){ if(e.pointerType === 'mouse') hovering = false; });
   viewport.addEventListener('pointerdown', function(e){
-    if(e.button) return;
-    drag = {id:e.pointerId, x:e.clientX, start:offset, moved:false, type:e.pointerType};
+    if(e.button || !mobile.matches) return;
+    drag ={id:e.pointerId, x:e.clientX, start:offset, moved:false, type:e.pointerType};
     suppressClick = false;
   });
   viewport.addEventListener('pointermove', function(e){
@@ -2029,7 +2065,7 @@
 
   // Trackpad sideways swipe scrolls the strip; vertical wheel stays page scroll.
   viewport.addEventListener('wheel', function(e){
-    if(Math.abs(e.deltaX) <= Math.abs(e.deltaY)) return;
+    if(!mobile.matches || Math.abs(e.deltaX) <= Math.abs(e.deltaY)) return;
     e.preventDefault();
     offset += e.deltaX;
     holdUntil = performance.now() + TOUCH_HOLD;
@@ -2037,17 +2073,18 @@
   }, {passive:false});
 
   viewport.addEventListener('keydown', function(e){
-    if(e.key !== 'ArrowRight' && e.key !== 'ArrowLeft') return;
+    if(!mobile.matches || (e.key !== 'ArrowRight' && e.key !== 'ArrowLeft')) return;
     e.preventDefault();
-    offset += e.key === 'ArrowRight' ? KEY_STEP : -KEY_STEP;
+    var column = setWidth * 2 / period;
+    offset += e.key === 'ArrowRight' ? column : -column;
     render();
   });
   // Tabbing to a card: overflow:hidden still lets the browser scroll it into
   // view, so undo that and bring the card in via the transform instead.
   // Keyboard focus only: a mouse press also focuses, and must not hold the scroll.
-  viewport.addEventListener('scroll', function(){ viewport.scrollLeft = 0; });
+  viewport.addEventListener('scroll', function(){ if(mobile.matches) viewport.scrollLeft = 0; });
   viewport.addEventListener('focusin', function(e){
-    if(!e.target.matches(':focus-visible')) return;
+    if(!mobile.matches || !e.target.matches(':focus-visible')) return;
     focused = true;
     if(e.target !== viewport){
       offset = e.target.offsetLeft - track.children[0].offsetLeft;
@@ -2061,19 +2098,19 @@
       // Quarter steps; under 1/8 visible rounds to 0 and a sliver never plays.
       entries.forEach(function(en){ visibility.set(en.target, Math.round(en.intersectionRatio * 4)); });
       syncVideos();
-    }, {root:viewport, threshold:[0, 0.125, 0.25, 0.5, 0.75, 0.99]});
+    }, {threshold:[0, 0.125, 0.25, 0.5, 0.75, 0.99]});
     new IntersectionObserver(function(entries){
       stageVisible = entries[entries.length - 1].isIntersecting;
-      setRunning(stageVisible);
+      setRunning(stageVisible && mobile.matches);
       syncVideos();
     }, {threshold:0}).observe(viewport);
   } else {
-    setRunning(true);
+    stageVisible = true;
   }
 
-  measure();
+  applyMode();
   setPaused(userPaused);
-  window.addEventListener('resize', function(){ measure(); syncVideos(); });
+  window.addEventListener('resize', applyMode);
   document.addEventListener('visibilitychange', syncVideos);
 })();
 </script>

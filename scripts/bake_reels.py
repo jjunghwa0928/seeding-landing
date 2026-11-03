@@ -4,12 +4,13 @@
 Why: raw phone/Instagram exports are 10-100MB each. Muted 720p-ish H.264 with
 faststart plus a small WebP poster keeps the strip light on GitHub Pages.
 
-Usage: python3 scripts/bake_reels.py [--src assets/reels/src] [--links links.txt]
+Usage: python3 scripts/bake_reels.py [--src assets/reels/src] [--links links.txt] [--placeholders N]
 Output: assets/reels/<sha1(SCALE + content)[:12]>.mp4 + .webp, and the region between
 <!-- reels:strip --> and <!-- /reels:strip --> in index.html rewritten.
-Re-runs skip outputs already present. 0 videos empties the region and hides
-<section id="reels">. A missing --src directory is an error, not 0 videos: src is
-gitignored, so a fresh clone must not silently wipe the live strip.
+Re-runs skip outputs already present. 0 videos renders N empty placeholder boxes
+(default 10); --placeholders 0 instead empties the region and hides <section id="reels">.
+A missing --src directory is an error, not 0 videos: src is gitignored, so a fresh
+clone must not silently wipe the live strip.
 """
 import argparse, functools, hashlib, html, os, re, subprocess, sys
 
@@ -19,6 +20,7 @@ POSTER_AT = 1.0
 # Fit inside 720x1280 without upscaling; even dimensions because yuv420p requires them.
 SCALE = "scale='min(720,iw)':'min(1280,ih)':force_original_aspect_ratio=decrease:force_divisible_by=2"
 EAGER_CARDS = 4  # cards past this get preload="none"
+PLACEHOLDER = '<div class="reel-card is-placeholder" aria-hidden="true"></div>'
 STRIP_RE = re.compile(r'<!-- reels:strip -->.*?<!-- /reels:strip -->', re.S)
 SECTION_RE = re.compile(r'<section id="reels"[^>]*>')
 INDENT = "        "
@@ -144,8 +146,12 @@ def main():
     ap.add_argument("--links", help="text file: one Instagram URL per line, same order as the sorted sources")
     ap.add_argument("--html", default="index.html")
     ap.add_argument("--out", default="assets/reels")
+    ap.add_argument("--placeholders", type=int, default=10,
+                    help="empty boxes to show when there are 0 videos; 0 hides the section instead")
     a = ap.parse_args()
 
+    if a.placeholders < 0:
+        ap.error("--placeholders must be 0 or more")
     if not os.path.isdir(a.src):
         sys.exit(f"source directory not found: {a.src} (create it and add videos; nothing was changed)")
     os.makedirs(a.out, exist_ok=True)
@@ -174,7 +180,9 @@ def main():
         total += os.path.getsize(mp4) + os.path.getsize(webp)
         cards.append(card_html(n, stem, link, web_dir))
 
-    rewrite_html(a.html, cards)
+    videos = len(cards)
+    placeholders = 0 if videos else a.placeholders
+    rewrite_html(a.html, cards or [PLACEHOLDER] * placeholders)
 
     orphans = sorted(n for n in os.listdir(a.out)
                      if n.endswith((".mp4", ".webp")) and os.path.splitext(n)[0] not in stems)
@@ -182,7 +190,8 @@ def main():
         print(f"note: {len(orphans)} files in {a.out} are no longer used; git rm them if replaced for good:")
         for n in orphans:
             print(f"  {n}")
-    print(f"reels: {len(cards)} videos, {total / 1024 / 1024:.1f} MB ({done} transcoded, {skipped} skipped)")
+    print(f"reels: {videos} videos, {placeholders} placeholders, {total / 1024 / 1024:.1f} MB "
+          f"({done} transcoded, {skipped} skipped)")
 
 
 if __name__ == "__main__":
