@@ -1,5 +1,5 @@
 // GA4 측정 ID를 채운다 (형식: G-XXXX). 비어 있으면 아무 것도 하지 않는다.
-const GA_MEASUREMENT_ID = "";
+const GA_MEASUREMENT_ID = "G-DP1ZBV2LQN";
 
 // 운영 도메인에서만 로드한다 (github.io·localhost에서는 데이터를 보내지 않음).
 if (GA_MEASUREMENT_ID && location.hostname === "influencer.enclu.com") {
