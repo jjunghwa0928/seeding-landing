@@ -464,6 +464,49 @@
   .sec-head{margin-bottom:56px;}
   @media (max-width:734px){ .sec-head{margin-bottom:36px;} }
 
+  /* ---------- Reels strip (cards baked by scripts/bake_reels.py) ---------- */
+  /* Desktop is a static 5x2 grid. Mobile is a 2-row strip that scrolls natively
+     until the script below takes over (.is-live), so it stays usable without JS.
+     The 768px split is shared with the script's matchMedia. */
+  section.reels{padding-bottom:0;}
+  .reels[hidden]{display:none;}
+  .reels .sec-head{margin-bottom:32px;}
+  .reels-bar{display:flex;justify-content:flex-end;margin-bottom:16px;}
+  .reels-bar[hidden]{display:none;}
+  .reels-toggle{
+    width:44px;height:44px;border-radius:50%;border:1px solid var(--hairline);background:var(--white);color:var(--ink);
+    display:flex;align-items:center;justify-content:center;
+    transition:border-color var(--dur-2) var(--ease);
+  }
+  .reels-toggle:hover{border-color:var(--ink);}
+  .reels-toggle svg{width:16px;height:16px;fill:currentColor;display:block;}
+  .reels-toggle .icon-play{display:none;}
+  .reels-toggle[data-state="paused"] .icon-play{display:block;}
+  .reels-toggle[data-state="paused"] .icon-pause{display:none;}
+  .reel-card{
+    position:relative;display:block;aspect-ratio:9/16;overflow:hidden;
+    border-radius:var(--radius);background:var(--parchment);
+  }
+  .reel-card video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;pointer-events:none;transition:transform var(--dur-3) var(--ease);}
+  @media (hover:hover){ .reel-card:hover video{transform:scale(1.03);} }
+  @media (min-width:768px){
+    .reels-viewport{max-width:980px;margin:0 auto;padding:0 22px;}
+    .reels-track{display:grid;grid-template-columns:repeat(5,1fr);gap:20px;}
+    .reel-card.is-clone{display:none;}
+  }
+  @media (max-width:767px){
+    .reels-viewport{overflow-x:auto;scrollbar-width:none;touch-action:pan-x pan-y;}
+    .reels-viewport::-webkit-scrollbar{display:none;}
+    .reels-viewport.is-live{overflow:hidden;touch-action:pan-y;cursor:grab;user-select:none;-webkit-user-select:none;}
+    .reels-viewport.is-dragging{cursor:grabbing;}
+    .reels-viewport:focus-visible{outline-offset:-2px;}
+    .reels-track{
+      display:grid;grid-auto-flow:column;grid-template-rows:repeat(2,auto);grid-auto-columns:38vw;gap:12px;
+      width:max-content;will-change:transform;
+    }
+  }
+  @media (prefers-reduced-motion:reduce){ .reel-card video{transition:none;} .reel-card:hover video{transform:none;} }
+
   /* ---------- Gallery / reviews ---------- */
   /* Sticky, scroll-spy category bar (user: "카테고리 버튼을 누르려면 다시
      올려야하는 불편함이 있어 이걸 개선해줘"). It is a normal child near the
@@ -638,17 +681,42 @@
   /* ---------- Brands ---------- */
   .brands h2, .brands .subhead{color:#fff;}
   .brands .subhead{color:var(--on-dark-muted);}
-  .brand-wall{display:grid;grid-template-columns:repeat(7,1fr);gap:1px;background:var(--hairline-dark);border-radius:var(--radius);overflow:hidden;margin-top:56px;}
+  /* Logo marquee: the script below appends one copy of .brand-set, so -50% of
+     the track is exactly one set. padding-right counts the trailing gap into
+     that width, which is what makes the loop seamless. overflow:clip (not
+     hidden) stops keyboard focus from scrolling the wall out of step. */
+  .brand-wall{
+    overflow:hidden;overflow:clip;margin-top:56px;
+    -webkit-mask-image:linear-gradient(to right,transparent,#000 6%,#000 94%,transparent);
+    mask-image:linear-gradient(to right,transparent,#000 6%,#000 94%,transparent);
+  }
+  .brand-track{display:flex;width:max-content;animation:brandFlow 120s linear infinite;}
+  @keyframes brandFlow{ from{transform:translateX(0);} to{transform:translateX(-50%);} }
+  @media (hover:hover){ .brand-wall:hover .brand-track{animation-play-state:paused;} }
+  .brand-wall:has(:focus-visible) .brand-track{animation-play-state:paused;}
+  .brand-set{display:flex;gap:12px;padding-right:12px;}
   .brand-chip{
-    background:#141414;padding:18px 10px;display:flex;flex-direction:column;align-items:center;justify-content:center;
-    height:92px;width:100%;
+    background:#141414;border:1px solid var(--hairline-dark);border-radius:var(--radius-sm);
+    padding:18px 10px;display:flex;flex-direction:column;align-items:center;justify-content:center;
+    flex:0 0 auto;width:208px;height:124px;
     transition:background var(--dur-2) var(--ease);
   }
   .brand-chip:hover,.brand-chip:focus-visible{background:#1d1d1d;}
-  .brand-chip img{height:28px;width:auto;display:block;max-width:86%;filter:brightness(0) invert(1);opacity:0.86;}
-  .brand-name{font-size:11px;font-weight:500;color:var(--on-dark-muted-56);text-align:center;margin-top:8px;}
-  @media (max-width:1024px){ .brand-wall{grid-template-columns:repeat(4,1fr);} }
-  @media (max-width:640px){ .brand-wall{grid-template-columns:repeat(3,1fr);} }
+  .brand-chip:focus-visible{outline-offset:-2px;border-radius:var(--radius-sm);}
+  .brand-chip img{height:40px;width:auto;display:block;max-width:86%;object-fit:contain;filter:brightness(0) invert(1);opacity:0.86;}
+  .brand-name{font-size:12px;font-weight:500;color:var(--on-dark-muted-56);text-align:center;margin-top:8px;}
+  @media (max-width:734px){
+    .brand-set{gap:8px;padding-right:8px;}
+    .brand-chip{width:156px;height:104px;padding:14px 8px;}
+    .brand-chip img{height:32px;}
+    .brand-name{font-size:11px;}
+  }
+  @media (prefers-reduced-motion:reduce){
+    .brand-wall{overflow:visible;-webkit-mask-image:none;mask-image:none;}
+    .brand-track{display:block;width:auto;animation:none;}
+    .brand-set{flex-wrap:wrap;justify-content:center;padding-right:0;}
+    .brand-set[aria-hidden]{display:none;}
+  }
 
   /* ---------- Handoff ---------- */
   .handoff-card{text-align:center;max-width:680px;margin:0 auto;}
@@ -936,6 +1004,36 @@
   <a href="#faq"><span>자주 묻는 질문</span></a>
   <a href="#handoff"><span>예상 실적 · 문의</span></a>
 </nav>
+
+<!-- ===================== REELS STRIP ===================== -->
+<section id="reels" class="reels on-light">
+  <div class="wrap sec-head eyebrow-free reveal">
+    <h2 class="headline-sm">숏폼 리뷰</h2>
+    <p class="subhead">일본 인플루언서가 직접 찍어 올린 릴스입니다.</p>
+  </div>
+  <div class="wrap reels-bar" hidden>
+    <button class="reels-toggle" id="reelsToggle" type="button" aria-label="릴스 일시정지" data-state="playing">
+      <svg class="icon-pause" viewBox="0 0 16 16" aria-hidden="true"><path d="M3 2h3.5v12H3zM9.5 2H13v12H9.5z"/></svg>
+      <svg class="icon-play" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 2l10 6-10 6z"/></svg>
+    </button>
+  </div>
+  <div class="reels-viewport" id="reelsViewport" role="group" aria-label="숏폼 리뷰 영상">
+    <div class="reels-track" id="reelsTrack">
+        <!-- reels:strip -->
+        <div class="reel-card is-placeholder" aria-hidden="true"></div>
+        <div class="reel-card is-placeholder" aria-hidden="true"></div>
+        <div class="reel-card is-placeholder" aria-hidden="true"></div>
+        <div class="reel-card is-placeholder" aria-hidden="true"></div>
+        <div class="reel-card is-placeholder" aria-hidden="true"></div>
+        <div class="reel-card is-placeholder" aria-hidden="true"></div>
+        <div class="reel-card is-placeholder" aria-hidden="true"></div>
+        <div class="reel-card is-placeholder" aria-hidden="true"></div>
+        <div class="reel-card is-placeholder" aria-hidden="true"></div>
+        <div class="reel-card is-placeholder" aria-hidden="true"></div>
+        <!-- /reels:strip -->
+    </div>
+  </div>
+</section>
 
 <!-- ===================== REVIEW GALLERY ===================== -->
 <section id="gallery" class="on-light">
@@ -1439,33 +1537,33 @@
 <!-- ===================== BRANDS ===================== -->
 <section class="on-dark brands" id="brands">
   <div class="wrap sec-head eyebrow-free reveal">
-    <h2 class="headline-sm">21개 브랜드가 함께하고 있습니다</h2>
+    <h2 class="headline-sm">다양한 K-뷰티 브랜드가 함께하고 있습니다</h2>
     <p class="subhead">엔클루 네트워크로 일본·미국·베트남·말레이시아에 진출한 K-뷰티 브랜드입니다.</p>
   </div>
   <div class="wrap-wide">
-    <div class="brand-wall reveal" id="brandWall">
-      <button type="button" class="brand-chip reveal" aria-label="ABIB 로고"><img src="assets/IMG/brands/abib.svg" alt="" aria-hidden="true" width="140" height="40" loading="lazy"><span class="brand-name">ABIB</span></button>
-      <button type="button" class="brand-chip reveal" aria-label="Ariul 로고"><img src="assets/IMG/brands/ariul.svg" alt="" aria-hidden="true" width="140" height="40" loading="lazy"><span class="brand-name">Ariul</span></button>
-      <button type="button" class="brand-chip reveal" aria-label="Begins 로고"><img src="assets/IMG/brands/begins.svg" alt="" aria-hidden="true" width="140" height="40" loading="lazy"><span class="brand-name">Begins</span></button>
-      <button type="button" class="brand-chip reveal" aria-label="CAELA 로고"><img src="assets/IMG/brands/caela.svg" alt="" aria-hidden="true" width="140" height="40" loading="lazy"><span class="brand-name">CAELA</span></button>
-      <button type="button" class="brand-chip reveal" aria-label="CELLADIX 로고"><img src="assets/IMG/brands/celladix.svg" alt="" aria-hidden="true" width="140" height="40" loading="lazy"><span class="brand-name">CELLADIX</span></button>
-      <button type="button" class="brand-chip reveal" aria-label="Chasin Rabbits 로고"><img src="assets/IMG/brands/chasin-rabbits.svg" alt="" aria-hidden="true" width="140" height="40" loading="lazy"><span class="brand-name">Chasin Rabbits</span></button>
-      <button type="button" class="brand-chip reveal" aria-label="Dr.Choi Solution 로고"><img src="assets/IMG/brands/dr-choi-solution.svg" alt="" aria-hidden="true" width="140" height="40" loading="lazy"><span class="brand-name">Dr.Choi Solution</span></button>
-      <button type="button" class="brand-chip reveal" aria-label="Dr.Different 로고"><img src="assets/IMG/brands/dr-different.svg" alt="" aria-hidden="true" width="140" height="40" loading="lazy"><span class="brand-name">Dr.Different</span></button>
-      <button type="button" class="brand-chip reveal" aria-label="Dr.Nineteen 로고"><img src="assets/IMG/brands/dr-nineteen.svg" alt="" aria-hidden="true" width="140" height="40" loading="lazy"><span class="brand-name">Dr.Nineteen</span></button>
-      <button type="button" class="brand-chip reveal" aria-label="FIVEVIBE 로고"><img src="assets/IMG/brands/fivevibe.svg" alt="" aria-hidden="true" width="140" height="40" loading="lazy"><span class="brand-name">FIVEVIBE</span></button>
-      <button type="button" class="brand-chip reveal" aria-label="INGA 로고"><img src="assets/IMG/brands/inga.svg" alt="" aria-hidden="true" width="140" height="40" loading="lazy"><span class="brand-name">INGA</span></button>
-      <button type="button" class="brand-chip reveal" aria-label="isoi 로고"><img src="assets/IMG/brands/isoi.svg" alt="" aria-hidden="true" width="140" height="40" loading="lazy"><span class="brand-name">isoi</span></button>
-      <button type="button" class="brand-chip reveal" aria-label="KUNDAL 로고"><img src="assets/IMG/brands/kundal.svg" alt="" aria-hidden="true" width="140" height="40" loading="lazy"><span class="brand-name">KUNDAL</span></button>
-      <button type="button" class="brand-chip reveal" aria-label="Lanbelle 로고"><img src="assets/IMG/brands/lanbelle.svg" alt="" aria-hidden="true" width="140" height="40" loading="lazy"><span class="brand-name">Lanbelle</span></button>
-      <button type="button" class="brand-chip reveal" aria-label="MASTINA 로고"><img src="assets/IMG/brands/mastina.svg" alt="" aria-hidden="true" width="140" height="40" loading="lazy"><span class="brand-name">MASTINA</span></button>
-      <button type="button" class="brand-chip reveal" aria-label="NEEDLY 로고"><img src="assets/IMG/brands/needly.svg" alt="" aria-hidden="true" width="140" height="40" loading="lazy"><span class="brand-name">NEEDLY</span></button>
-      <button type="button" class="brand-chip reveal" aria-label="NM 로고"><img src="assets/IMG/brands/nm.svg" alt="" aria-hidden="true" width="140" height="40" loading="lazy"><span class="brand-name">NM</span></button>
-      <button type="button" class="brand-chip reveal" aria-label="Papa Recipe 로고"><img src="assets/IMG/brands/papa-recipe.svg" alt="" aria-hidden="true" width="140" height="40" loading="lazy"><span class="brand-name">Papa Recipe</span></button>
-      <button type="button" class="brand-chip reveal" aria-label="Real Barrier 로고"><img src="assets/IMG/brands/realbarrier.svg" alt="" aria-hidden="true" width="140" height="40" loading="lazy"><span class="brand-name">Real Barrier</span></button>
-      <button type="button" class="brand-chip reveal" aria-label="SOME BY MI 로고"><img src="assets/IMG/brands/somebymi.svg" alt="" aria-hidden="true" width="140" height="40" loading="lazy"><span class="brand-name">SOME BY MI</span></button>
-      <button type="button" class="brand-chip reveal" aria-label="TOOZ 로고"><img src="assets/IMG/brands/tooz.svg" alt="" aria-hidden="true" width="140" height="40" loading="lazy"><span class="brand-name">TOOZ</span></button>
-    </div>
+    <div class="brand-wall reveal" id="brandWall"><div class="brand-track"><div class="brand-set">
+      <button type="button" class="brand-chip" aria-label="ABIB 로고"><img src="assets/IMG/brands/abib.svg" alt="" aria-hidden="true" width="140" height="40" decoding="async"><span class="brand-name">ABIB</span></button>
+      <button type="button" class="brand-chip" aria-label="Ariul 로고"><img src="assets/IMG/brands/ariul.svg" alt="" aria-hidden="true" width="140" height="40" decoding="async"><span class="brand-name">Ariul</span></button>
+      <button type="button" class="brand-chip" aria-label="Begins 로고"><img src="assets/IMG/brands/begins.svg" alt="" aria-hidden="true" width="140" height="40" decoding="async"><span class="brand-name">Begins</span></button>
+      <button type="button" class="brand-chip" aria-label="CAELA 로고"><img src="assets/IMG/brands/caela.svg" alt="" aria-hidden="true" width="140" height="40" decoding="async"><span class="brand-name">CAELA</span></button>
+      <button type="button" class="brand-chip" aria-label="CELLADIX 로고"><img src="assets/IMG/brands/celladix.svg" alt="" aria-hidden="true" width="140" height="40" decoding="async"><span class="brand-name">CELLADIX</span></button>
+      <button type="button" class="brand-chip" aria-label="Chasin Rabbits 로고"><img src="assets/IMG/brands/chasin-rabbits.svg" alt="" aria-hidden="true" width="140" height="40" decoding="async"><span class="brand-name">Chasin Rabbits</span></button>
+      <button type="button" class="brand-chip" aria-label="Dr.Choi Solution 로고"><img src="assets/IMG/brands/dr-choi-solution.svg" alt="" aria-hidden="true" width="140" height="40" decoding="async"><span class="brand-name">Dr.Choi Solution</span></button>
+      <button type="button" class="brand-chip" aria-label="Dr.Different 로고"><img src="assets/IMG/brands/dr-different.svg" alt="" aria-hidden="true" width="140" height="40" decoding="async"><span class="brand-name">Dr.Different</span></button>
+      <button type="button" class="brand-chip" aria-label="Dr.Nineteen 로고"><img src="assets/IMG/brands/dr-nineteen.svg" alt="" aria-hidden="true" width="140" height="40" decoding="async"><span class="brand-name">Dr.Nineteen</span></button>
+      <button type="button" class="brand-chip" aria-label="FIVEVIBE 로고"><img src="assets/IMG/brands/fivevibe.svg" alt="" aria-hidden="true" width="140" height="40" decoding="async"><span class="brand-name">FIVEVIBE</span></button>
+      <button type="button" class="brand-chip" aria-label="INGA 로고"><img src="assets/IMG/brands/inga.svg" alt="" aria-hidden="true" width="140" height="40" decoding="async"><span class="brand-name">INGA</span></button>
+      <button type="button" class="brand-chip" aria-label="isoi 로고"><img src="assets/IMG/brands/isoi.svg" alt="" aria-hidden="true" width="140" height="40" decoding="async"><span class="brand-name">isoi</span></button>
+      <button type="button" class="brand-chip" aria-label="KUNDAL 로고"><img src="assets/IMG/brands/kundal.svg" alt="" aria-hidden="true" width="140" height="40" decoding="async"><span class="brand-name">KUNDAL</span></button>
+      <button type="button" class="brand-chip" aria-label="Lanbelle 로고"><img src="assets/IMG/brands/lanbelle.svg" alt="" aria-hidden="true" width="140" height="40" decoding="async"><span class="brand-name">Lanbelle</span></button>
+      <button type="button" class="brand-chip" aria-label="MASTINA 로고"><img src="assets/IMG/brands/mastina.svg" alt="" aria-hidden="true" width="140" height="40" decoding="async"><span class="brand-name">MASTINA</span></button>
+      <button type="button" class="brand-chip" aria-label="NEEDLY 로고"><img src="assets/IMG/brands/needly.svg" alt="" aria-hidden="true" width="140" height="40" decoding="async"><span class="brand-name">NEEDLY</span></button>
+      <button type="button" class="brand-chip" aria-label="NM 로고"><img src="assets/IMG/brands/nm.svg" alt="" aria-hidden="true" width="140" height="40" decoding="async"><span class="brand-name">NM</span></button>
+      <button type="button" class="brand-chip" aria-label="Papa Recipe 로고"><img src="assets/IMG/brands/papa-recipe.svg" alt="" aria-hidden="true" width="140" height="40" decoding="async"><span class="brand-name">Papa Recipe</span></button>
+      <button type="button" class="brand-chip" aria-label="Real Barrier 로고"><img src="assets/IMG/brands/realbarrier.svg" alt="" aria-hidden="true" width="140" height="40" decoding="async"><span class="brand-name">Real Barrier</span></button>
+      <button type="button" class="brand-chip" aria-label="SOME BY MI 로고"><img src="assets/IMG/brands/somebymi.svg" alt="" aria-hidden="true" width="140" height="40" decoding="async"><span class="brand-name">SOME BY MI</span></button>
+      <button type="button" class="brand-chip" aria-label="TOOZ 로고"><img src="assets/IMG/brands/tooz.svg" alt="" aria-hidden="true" width="140" height="40" decoding="async"><span class="brand-name">TOOZ</span></button>
+    </div></div></div>
   </div>
 </section>
 
@@ -1790,6 +1888,256 @@
       v.pause();
     });
   }
+})();
+</script>
+
+<!-- reels:js -->
+<script>
+(function(){
+  // Cards are baked by scripts/bake_reels.py. Desktop is a static grid, so only
+  // playback runs there; the marquee, clones and drag are mobile only. Moving and
+  // playing are separate: hover/drag only hold the scroll, the toggle stops the
+  // videos too. Cards may be empty placeholders with no <video>.
+  var section = document.getElementById('reels');
+  var viewport = document.getElementById('reelsViewport');
+  var track = document.getElementById('reelsTrack');
+  var toggle = document.getElementById('reelsToggle');
+  if(!section || section.hidden || !viewport || !track || !toggle) return;
+  var originals = Array.prototype.slice.call(track.children);
+  if(!originals.length) return;
+
+  var reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var mobile = window.matchMedia('(max-width:767px)');
+  var bar = toggle.parentNode;
+  var hasVideos = !!track.querySelector('video');
+  var SPEED = 32, DRAG_SLOP = 6, TOUCH_HOLD = 1500;
+  // Two rows flow by column, so an odd count swaps rows every pass: the pattern
+  // only repeats after two sets.
+  var period = originals.length % 2 ? originals.length * 2 : originals.length;
+  var offset = 0, setWidth = 0, lastT = 0, rafId = 0;
+  var userPaused = reduced, hovering = false, focused = false, holdUntil = 0;
+  var stageVisible = false, drag = null, suppressClick = false;
+
+  function cloneSet(){
+    originals.forEach(function(card){
+      var c = card.cloneNode(true);
+      c.classList.add('is-clone');
+      c.setAttribute('aria-hidden', 'true');
+      if(c.tagName === 'A') c.tabIndex = -1;
+      // No src until it is picked to play, so a clone can never fetch video.
+      var v = c.querySelector('video');
+      if(v){
+        v.preload = 'none';
+        v.setAttribute('data-src', v.getAttribute('src'));
+        v.removeAttribute('src');
+      }
+      track.appendChild(c);
+    });
+  }
+  // One extra set is only seamless if a set covers the viewport; few cards need
+  // more copies. The extra column of slack covers a half-filled last column.
+  function measure(){
+    var keep = setWidth ? offset / setWidth : 0;
+    cloneSetsUntilFilled();
+    setWidth = track.children[period].offsetLeft - track.children[0].offsetLeft;
+    offset = keep * setWidth;
+    render();
+  }
+  function cloneSetsUntilFilled(){
+    while(track.children.length <= period) cloneSet();
+    var one = track.children[period].offsetLeft - track.children[0].offsetLeft;
+    var column = one * 2 / period;
+    while(track.children.length * column / 2 < one + viewport.clientWidth + column) cloneSet();
+  }
+  function render(){
+    if(setWidth) offset = ((offset % setWidth) + setWidth) % setWidth;
+    track.style.transform = 'translate3d(' + (-offset) + 'px,0,0)';
+  }
+
+  function tick(now){
+    rafId = requestAnimationFrame(tick);
+    var dt = Math.min(now - lastT, 100);
+    lastT = now;
+    if(reduced || userPaused || hovering || focused || drag || now < holdUntil || document.hidden) return;
+    offset += SPEED * dt / 1000;
+    render();
+  }
+  function setRunning(on){
+    if(on && !rafId && !reduced){ lastT = performance.now(); rafId = requestAnimationFrame(tick); }
+    else if(!on && rafId){ cancelAnimationFrame(rafId); rafId = 0; }
+  }
+
+  // The per-video observer uses the page viewport, and its ratio also accounts
+  // for the strip's clipping. Desktop plays every visible card; phones play only
+  // the 2 most visible, so they never decode more than that.
+  var visibility = new WeakMap();
+  var videoIO = null;
+  function startVideo(v){
+    if(!v.getAttribute('src')) v.src = v.getAttribute('data-src');
+    v.muted = true;
+    var p = v.play();
+    if(p && p.catch) p.catch(function(){});
+  }
+  function syncVideos(){
+    var all = Array.prototype.slice.call(track.querySelectorAll('video'));
+    var chosen = [];
+    if(stageVisible && !userPaused && !document.hidden){
+      // Ties keep what is already playing, then DOM order, so equally visible
+      // cards don't trade places every time the marquee crosses a threshold.
+      chosen = all.filter(function(v){ return visibility.get(v) > 0; }).sort(function(a, b){
+        return (visibility.get(b) - visibility.get(a)) || (a.paused - b.paused);
+      }).slice(0, mobile.matches ? 2 : Infinity);
+    }
+    all.forEach(function(v){
+      if(chosen.indexOf(v) === -1){ if(!v.paused) v.pause(); }
+      else if(v.paused) startVideo(v);
+    });
+  }
+  function observeVideos(){
+    if(!videoIO) return;
+    track.querySelectorAll('video').forEach(function(v){ videoIO.observe(v); });
+  }
+
+  function setPaused(paused){
+    userPaused = paused;
+    toggle.setAttribute('data-state', paused ? 'paused' : 'playing');
+    toggle.setAttribute('aria-label', paused ? '릴스 재생' : '릴스 일시정지');
+    syncVideos();
+  }
+
+  // Runs on load and every resize, which also covers crossing the breakpoint.
+  function applyMode(){
+    var m = mobile.matches;
+    viewport.classList.toggle('is-live', m);
+    if(m){
+      viewport.setAttribute('tabindex', '0');
+      viewport.setAttribute('aria-label', '숏폼 리뷰 영상, 좌우 방향키로 이동');
+      measure();
+    } else {
+      viewport.removeAttribute('tabindex');
+      viewport.setAttribute('aria-label', '숏폼 리뷰 영상');
+      track.style.transform = '';
+      drag = null;
+    }
+    // The toggle stops the slide and the videos; with neither there is nothing to pause.
+    bar.hidden = !(hasVideos || (m && !reduced));
+    observeVideos();
+    setRunning(stageVisible && m);
+    syncVideos();
+  }
+
+  toggle.addEventListener('click', function(){ setPaused(!userPaused); });
+
+  viewport.addEventListener('pointerenter', function(e){ if(e.pointerType === 'mouse') hovering = true; });
+  viewport.addEventListener('pointerleave', function(e){ if(e.pointerType === 'mouse') hovering = false; });
+  viewport.addEventListener('pointerdown', function(e){
+    if(e.button || !mobile.matches) return;
+    drag ={id:e.pointerId, x:e.clientX, start:offset, moved:false, type:e.pointerType};
+    suppressClick = false;
+  });
+  viewport.addEventListener('pointermove', function(e){
+    if(!drag || e.pointerId !== drag.id) return;
+    var dx = e.clientX - drag.x;
+    if(!drag.moved && Math.abs(dx) < DRAG_SLOP) return;
+    if(!drag.moved){
+      // Capture only once it is a real drag: capturing on pointerdown
+      // retargets the click and would break plain taps on card links.
+      drag.moved = true;
+      viewport.setPointerCapture(e.pointerId);
+      viewport.classList.add('is-dragging');
+    }
+    offset = drag.start - dx;
+    render();
+  });
+  function endDrag(e){
+    if(!drag || e.pointerId !== drag.id) return;
+    suppressClick = drag.moved;
+    if(drag.type !== 'mouse') holdUntil = performance.now() + TOUCH_HOLD;
+    viewport.classList.remove('is-dragging');
+    drag = null;
+  }
+  viewport.addEventListener('pointerup', endDrag);
+  viewport.addEventListener('pointercancel', endDrag);
+  viewport.addEventListener('click', function(e){
+    if(suppressClick){ e.preventDefault(); e.stopPropagation(); suppressClick = false; }
+  }, true);
+  viewport.addEventListener('dragstart', function(e){ e.preventDefault(); });
+
+  // Trackpad sideways swipe scrolls the strip; vertical wheel stays page scroll.
+  viewport.addEventListener('wheel', function(e){
+    if(!mobile.matches || Math.abs(e.deltaX) <= Math.abs(e.deltaY)) return;
+    e.preventDefault();
+    offset += e.deltaX;
+    holdUntil = performance.now() + TOUCH_HOLD;
+    render();
+  }, {passive:false});
+
+  viewport.addEventListener('keydown', function(e){
+    if(!mobile.matches || (e.key !== 'ArrowRight' && e.key !== 'ArrowLeft')) return;
+    e.preventDefault();
+    var column = setWidth * 2 / period;
+    offset += e.key === 'ArrowRight' ? column : -column;
+    render();
+  });
+  // Tabbing to a card: overflow:hidden still lets the browser scroll it into
+  // view, so undo that and bring the card in via the transform instead.
+  // Keyboard focus only: a mouse press also focuses, and must not hold the scroll.
+  viewport.addEventListener('scroll', function(){ if(mobile.matches) viewport.scrollLeft = 0; });
+  viewport.addEventListener('focusin', function(e){
+    if(!mobile.matches || !e.target.matches(':focus-visible')) return;
+    focused = true;
+    if(e.target !== viewport){
+      offset = e.target.offsetLeft - track.children[0].offsetLeft;
+      render();
+    }
+  });
+  viewport.addEventListener('focusout', function(){ focused = false; });
+
+  if('IntersectionObserver' in window){
+    videoIO = new IntersectionObserver(function(entries){
+      // Quarter steps; under 1/8 visible rounds to 0 and a sliver never plays.
+      entries.forEach(function(en){ visibility.set(en.target, Math.round(en.intersectionRatio * 4)); });
+      syncVideos();
+    }, {threshold:[0, 0.125, 0.25, 0.5, 0.75, 0.99]});
+    new IntersectionObserver(function(entries){
+      stageVisible = entries[entries.length - 1].isIntersecting;
+      setRunning(stageVisible && mobile.matches);
+      syncVideos();
+    }, {threshold:0}).observe(viewport);
+  } else {
+    stageVisible = true;
+  }
+
+  applyMode();
+  setPaused(userPaused);
+  window.addEventListener('resize', applyMode);
+  document.addEventListener('visibilitychange', syncVideos);
+})();
+</script>
+
+<!-- brands:js -->
+<script>
+(function(){
+  // Motion is CSS only (.brand-track); this just adds the second set it loops into.
+  var wall = document.getElementById('brandWall');
+  var set = wall && wall.querySelector('.brand-set');
+  if(!set) return;
+  var track = set.parentNode;
+  var copy = set.cloneNode(true);
+  copy.setAttribute('aria-hidden', 'true');
+  copy.querySelectorAll('.brand-chip').forEach(function(c){ c.tabIndex = -1; });
+  track.appendChild(copy);
+
+  // The marquee pauses on keyboard focus, which could strand the focused chip
+  // off-screen, so seek the paused animation to bring it into view.
+  wall.addEventListener('focusin', function(e){
+    if(!e.target.matches(':focus-visible') || !track.getAnimations) return;
+    var anim = track.getAnimations()[0];
+    if(!anim) return;
+    var setWidth = track.offsetWidth / 2;
+    var x = Math.max(0, e.target.offsetLeft - set.children[0].offsetLeft - wall.clientWidth * 0.1);
+    anim.currentTime = anim.effect.getComputedTiming().duration * (x / setWidth);
+  });
 })();
 </script>
 
