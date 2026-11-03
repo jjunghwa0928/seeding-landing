@@ -8,6 +8,9 @@
  *
  * 페이지가 window.encluQuoteContext()를 정의하면 제출 시점에 호출해
  * 반환값 {category, size, goal, voucher}를 화면에 표시하지 않고 전송 내용에 덧붙입니다.
+ *
+ * 열 때 history 항목을 하나 추가해 브라우저 뒤로 가기가 페이지 이탈 대신 모달 닫기가 되게 합니다.
+ * X/ESC/백드롭으로 닫으면 그 항목을 history.back()으로 되돌려 흔적을 남기지 않습니다.
  */
 (function(){
   "use strict";
@@ -46,6 +49,9 @@
       validate:function(v){ return v ? "" : "희망 진행 수량을 선택해 주세요."; } },
     { key:"message",  label:"문의 내용",         type:"textarea", required:false, placeholder:"희망 플랫폼, 제품명, 예산, 진행 일정 등 자유롭게 작성해 주세요." }
   ];
+
+  var HOME_URL = "index.html";
+  var IS_LANDING = !!document.getElementById("hero");
 
   var ICON_CLOSE = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>';
   var ICON_CHECK = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg>';
@@ -93,6 +99,10 @@
   dialog.id = "quoteDialog";
   dialog.setAttribute("aria-labelledby", "qf-title");
   dialog.innerHTML =
+    '<div class="qf-topbar">' +
+      '<a class="qf-home" href="' + HOME_URL + '" data-qf-home><span aria-hidden="true">←</span> 홈으로</a>' +
+      '<div class="qf-brand"><img src="assets/enclu_logo.png" width="28" height="28" alt=""><span>ENCLU</span></div>' +
+    '</div>' +
     '<button type="button" class="qf-close" data-qf-close aria-label="닫기">' + ICON_CLOSE + '</button>' +
     '<div class="qf-scroll">' +
       '<form class="qf-form" id="qf-form" novalidate>' +
@@ -108,7 +118,8 @@
         '<h2 class="qf-title" id="qf-success-title" tabindex="-1"></h2>' +
         '<p id="qf-success-text"></p>' +
         '<p id="qf-success-mail" hidden>메일 앱이 열리지 않았다면 <a id="qf-mail-link" href="#">여기를 눌러 다시 열거나</a> ' + CONSULT_EMAIL + '로 보내 주세요.</p>' +
-        '<button type="button" class="btn btn-blue" data-qf-close>닫기</button>' +
+        '<a class="btn btn-blue" href="' + HOME_URL + '" data-qf-home>홈으로 돌아가기</a>' +
+        '<button type="button" class="qf-textlink" data-qf-close>닫기</button>' +
       '</div>' +
     '</div>';
   document.body.appendChild(dialog);
@@ -231,7 +242,52 @@
   form.addEventListener("input", clearOnEdit);
   form.addEventListener("change", clearOnEdit);
 
-  function open(opts){
+  var HISTORY_KEY = "qfDialog";
+  var pushed = false;       // 현재 history 항목이 이 모달이 추가한 항목인지
+  var pendingBack = false;  // 닫으면서 호출한 history.back()의 popstate를 기다리는 중인지
+  var goTop = false;        // 닫은 뒤 페이지 맨 위로 이동할지 (랜딩의 홈으로)
+  var leaving = false;      // 다른 페이지로 이동 중인지 (tool.html의 홈으로)
+
+  function onOurEntry(){
+    return !!(history.state && history.state[HISTORY_KEY]);
+  }
+
+  function pushEntry(){
+    var state = {};
+    state[HISTORY_KEY] = true;
+    history.pushState(state, "", window.location.href);
+    pushed = true;
+  }
+
+  function afterClose(){
+    if(/^#(quote|consult)$/.test(window.location.hash)){
+      history.replaceState(null, "", window.location.pathname + window.location.search);
+    }
+    if(!goTop) return;
+    goTop = false;
+    // history 이동의 스크롤 복원이 끝난 뒤에 실행되도록 다음 태스크로 미룹니다.
+    setTimeout(function(){
+      var reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      window.scrollTo({ top:0, behavior: reduced ? "auto" : "smooth" });
+    }, 0);
+  }
+
+  function goHome(){
+    if(IS_LANDING){
+      goTop = true;
+      dialog.close();
+      return;
+    }
+    // 추가한 항목을 index.html로 교체하므로 되돌릴 항목이 남지 않습니다.
+    leaving = true;
+    pushed = false;
+    dialog.close();
+    window.location.replace(HOME_URL);
+  }
+
+  // resume: 이미 이 모달의 history 항목에 있을 때(새로고침, 앞으로 가기) 항목을 또 추가하지 않습니다.
+  function open(opts, resume){
+    goTop = false;
     if(finished) resetForm();
     var message = opts && opts.message;
     // 사용자가 직접 쓴 문의 내용은 덮어쓰지 않습니다.
@@ -247,13 +303,36 @@
     document.documentElement.classList.add("qf-lock");
     if(scrollbar > 0) document.body.style.paddingRight = scrollbar + "px";
     dialog.showModal();
+    if(resume) pushed = true;
+    else if(!pendingBack) pushEntry();
   }
 
   dialog.addEventListener("close", function(){
     document.documentElement.classList.remove("qf-lock");
     document.body.style.paddingRight = "";
-    if(/^#(quote|consult)$/.test(window.location.hash)){
-      history.replaceState(null, "", window.location.pathname + window.location.search);
+    if(leaving) return;
+    if(pushed){
+      pushed = false;
+      pendingBack = true;
+      history.back();
+    } else {
+      afterClose();
+    }
+  });
+
+  window.addEventListener("popstate", function(){
+    if(pendingBack){
+      pendingBack = false;
+      // back을 기다리는 사이 다시 열었다면 그때 미룬 항목을 이제 추가합니다.
+      if(dialog.open) pushEntry();
+      else afterClose();
+      return;
+    }
+    if(onOurEntry() && !dialog.open){
+      open(null, true);
+    } else if(!onOurEntry() && dialog.open){
+      pushed = false;
+      dialog.close();
     }
   });
 
@@ -263,6 +342,10 @@
   dialog.addEventListener("click", function(e){
     if(e.target === dialog && pressedBackdrop) dialog.close();
     else if(e.target.closest("[data-qf-close]")) dialog.close();
+    else if(e.target.closest("[data-qf-home]") && !e.metaKey && !e.ctrlKey && !e.shiftKey){
+      e.preventDefault();
+      goHome();
+    }
   });
 
   document.addEventListener("click", function(e){
@@ -276,5 +359,6 @@
     if(/^#(quote|consult)$/.test(window.location.hash) || /[?&]form=1\b/.test(window.location.search)) open();
   }
   window.addEventListener("hashchange", openFromUrl);
-  openFromUrl();
+  if(onOurEntry()) open(null, true);
+  else openFromUrl();
 })();

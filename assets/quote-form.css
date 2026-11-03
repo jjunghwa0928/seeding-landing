@@ -13,6 +13,8 @@ html.qf-lock{overflow:hidden;}
 @keyframes qfFade{from{opacity:0;}to{opacity:1;}}
 @media (prefers-reduced-motion:reduce){ .qf-dialog[open]{animation:none;} }
 
+.qf-topbar{display:none;}
+
 .qf-close{
   position:absolute;top:14px;right:14px;z-index:1;width:40px;height:40px;border-radius:50%;
   display:flex;align-items:center;justify-content:center;color:var(--ink-muted-80);background:var(--parchment);
@@ -65,15 +67,25 @@ textarea.qf-input{resize:vertical;min-height:96px;}
 .qf-success-icon svg{width:26px;height:26px;}
 .qf-success .qf-title{padding-right:0;}
 .qf-success p{margin:12px 0 0;font-size:15px;line-height:1.55;color:var(--ink-muted-80);}
-.qf-success a{color:var(--blue);}
+.qf-success p a{color:var(--blue);}
 .qf-success .btn{width:100%;height:50px;margin-top:24px;}
+.qf-textlink{display:block;margin:12px auto 0;padding:8px 12px;font-size:14px;color:var(--ink-muted-80);text-decoration:underline;text-underline-offset:2px;}
 
 /* 600px 미만: 전체 화면 시트 */
 @media (max-width:599px){
   .qf-dialog{
     width:100%;height:100vh;height:100dvh;max-height:none;margin:0;border-radius:0;
   }
+  /* 스크롤 영역 바깥의 플렉스 항목이라 내용을 스크롤해도 상단에 고정됩니다. X는 오른쪽 칸 위에 겹칩니다. */
+  .qf-topbar{
+    display:grid;grid-template-columns:1fr auto 1fr;align-items:center;flex:0 0 auto;
+    height:56px;padding:0 8px;background:var(--white);border-bottom:1px solid var(--hairline);
+  }
+  .qf-home{justify-self:start;display:flex;align-items:center;gap:4px;min-height:44px;padding:0 8px;font-size:15px;font-weight:500;color:var(--ink);white-space:nowrap;}
+  .qf-brand{display:flex;align-items:center;gap:8px;}
+  .qf-brand img{width:28px;height:28px;border-radius:6px;}
+  .qf-brand span{font-size:17px;font-weight:700;letter-spacing:-0.01em;color:var(--ink);}
   .qf-scroll{padding:24px 18px calc(24px + env(safe-area-inset-bottom));}
-  .qf-close{top:12px;right:12px;}
-  .qf-title{font-size:22px;}
+  .qf-close{top:6px;right:6px;width:44px;height:44px;background:none;}
+  .qf-title{font-size:22px;padding-right:0;}
 }
