@@ -11,7 +11,7 @@ const http = require('node:http');
 const fs = require('node:fs');
 const path = require('node:path');
 const { spawnSync } = require('node:child_process');
-const { createApp, loadConfig, startupError, QUANTITY_OPTIONS } = require('../server');
+const { createApp, loadConfig, startupError, QUANTITY_OPTIONS, VOUCHERS } = require('../server');
 
 // 테스트 중 서버 로그는 숨긴다
 const origLog = console.log;
@@ -232,6 +232,59 @@ describe('quote api', () => {
     }
   });
 
+  test('vouchers: valid values are accepted and shown in the mail', async () => {
+    const cases = [
+      [[], '미보유'],
+      [['kita'], '한국무역협회 보유, 중소벤처기업진흥공단 미보유'],
+      [['kosme'], '한국무역협회 미보유, 중소벤처기업진흥공단 보유'],
+      [['kita', 'kosme'], '한국무역협회 보유, 중소벤처기업진흥공단 보유']
+    ];
+    for (const [i, [vouchers, shown]] of cases.entries()) {
+      const res = await request(server, 'POST', '/api/quote', validPayload({ vouchers }));
+      assert.equal(res.status, 200, JSON.stringify(vouchers));
+      assert.ok(sent[i].text.includes(`수출바우처 보유: ${shown}\n`), JSON.stringify(vouchers));
+      assert.ok(sent[i].html.includes(`<td style="padding:4px 0">${shown}</td>`), JSON.stringify(vouchers));
+    }
+  });
+
+  test('vouchers: old clients that do not send the field still work', async () => {
+    const res = await request(server, 'POST', '/api/quote', validPayload());
+    assert.equal(res.status, 200);
+    assert.ok(sent[0].text.includes('수출바우처 보유: 미보유\n'));
+  });
+
+  test('vouchers: unknown or duplicate keys → 400 with its message, nothing sent', async () => {
+    for (const vouchers of [['nope'], ['kita', 'nope'], ['constructor'], ['kita', 'kita'], [['kita']]]) {
+      const res = await request(server, 'POST', '/api/quote', validPayload({ vouchers }));
+      assert.equal(res.status, 400, JSON.stringify(vouchers));
+      assert.equal(res.json.error, 'invalid_input');
+      assert.deepEqual(res.json.fields, { vouchers: '수출바우처 보유 여부를 다시 선택해 주세요.' });
+    }
+    assert.equal(sent.length, 0);
+  });
+
+  test('vouchers: non-array → 400, nothing sent', async () => {
+    for (const vouchers of ['kita', { 0: 'kita', length: 1 }, null, true, 1]) {
+      const res = await request(server, 'POST', '/api/quote', validPayload({ vouchers }));
+      assert.equal(res.status, 400, JSON.stringify(vouchers));
+      assert.deepEqual(res.json.fields, { vouchers: '수출바우처 보유 여부를 다시 선택해 주세요.' });
+    }
+    assert.equal(sent.length, 0);
+  });
+
+  test('vouchers: the labels in the form, the calculator and the API match', () => {
+    assert.deepEqual(VOUCHERS.map((v) => [v.key, v.label]), [
+      ['kita', '한국무역협회 수출바우처'],
+      ['kosme', '중소벤처기업진흥공단 수출바우처']
+    ]);
+    for (const file of [['assets', 'quote-form.js'], ['tool.html']]) {
+      const src = fs.readFileSync(path.join(__dirname, '..', '..', ...file), 'utf8');
+      const match = src.match(/var VOUCHERS = (\[[^\]]*\]);/);
+      assert.ok(match, `VOUCHERS not found in ${file.join('/')}`);
+      assert.deepEqual(JSON.parse(match[1]), VOUCHERS, file.join('/'));
+    }
+  });
+
   test('over-length fields → 400', async () => {
     let res = await request(server, 'POST', '/api/quote', validPayload({ message: 'x'.repeat(3001) }));
     assert.equal(res.status, 400);
@@ -286,10 +339,22 @@ describe('quote api', () => {
     const { text } = sent[0];
     assert.ok(text.includes('문의 경로: 예상 실적 확인'));
     assert.ok(text.includes('계산기 카테고리: 스킨케어'));
-    assert.ok(text.includes('계산기 인원: 5–10명'));
+    assert.ok(text.includes('계산기 인원: 5–10명'), 'cached old tool.html still shows people');
     assert.ok(text.includes('계산기 수출바우처: 적용 Bcc: x@example.com'));
     assert.ok(!text.includes('nested'));
     assert.ok(!text.includes('nope'));
+  });
+
+  test('context: tier and quantity from the v6 calculator reach the mail', async () => {
+    const res = await request(server, 'POST', '/api/quote', validPayload({
+      source: 'tool',
+      context: { category: '스킨케어', tier: '마이크로', quantity: '50건', goal: '인지도 확대', voucher: '한국무역협회, 중소벤처기업진흥공단' }
+    }));
+    assert.equal(res.status, 200);
+    const { text } = sent[0];
+    assert.ok(text.includes('계산기 인플루언서 등급: 마이크로'));
+    assert.ok(text.includes('계산기 시딩 수량: 50건'));
+    assert.ok(text.includes('계산기 수출바우처: 한국무역협회, 중소벤처기업진흥공단'));
   });
 
   test('non-object context and unknown source are ignored, not fatal', async () => {
@@ -337,6 +402,21 @@ describe('quote api', () => {
     const second = await request(server, 'POST', '/api/quote', validPayload({ contactName: '김철수' }));
     assert.equal(second.status, 200);
     assert.equal(sent.length, 2);
+  });
+
+  test('duplicate guard: vouchers count, but their order does not', async () => {
+    let res = await request(server, 'POST', '/api/quote', validPayload({ vouchers: ['kita', 'kosme'] }));
+    assert.equal(res.status, 200);
+    res = await request(server, 'POST', '/api/quote', validPayload({ vouchers: ['kosme', 'kita'] }));
+    assert.equal(res.status, 429, 'same set in another order');
+    assert.equal(res.json.error, 'duplicate');
+    res = await request(server, 'POST', '/api/quote', validPayload({ vouchers: ['kita'] }));
+    assert.equal(res.status, 200, 'different holdings');
+    res = await request(server, 'POST', '/api/quote', validPayload());
+    assert.equal(res.status, 200, 'missing field differs from a held voucher');
+    res = await request(server, 'POST', '/api/quote', validPayload({ vouchers: [] }));
+    assert.equal(res.status, 429, 'empty is the same as missing');
+    assert.equal(sent.length, 3);
   });
 
   test('smtp failure → 502 generic error, and an identical retry is not blocked', async () => {

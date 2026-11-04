@@ -7,7 +7,8 @@
  *  - 페이지 주소의 #quote (tool.html의 기존 #consult, ?form=1 링크도 지원)
  *
  * 페이지가 window.encluQuoteContext()를 정의하면 제출 시점에 호출해
- * 반환값 {category, people, goal, voucher}를 화면에 표시하지 않고 전송 내용에 덧붙입니다.
+ * 반환값 {category, tier, quantity, goal, voucher}를 화면에 표시하지 않고 전송 내용에 덧붙입니다.
+ * window.encluQuoteVouchers()를 정의하면 모달을 열 때 반환한 키(["kita"] 등)로 수출바우처 칸을 미리 체크합니다.
  *
  * 열 때 history 항목을 하나 추가해 브라우저 뒤로 가기가 페이지 이탈 대신 모달 닫기가 되게 합니다.
  * X/ESC/백드롭으로 닫으면 그 항목을 history.back()으로 되돌려 흔적을 남기지 않습니다.
@@ -27,7 +28,13 @@
 
   // api/server.js의 QUANTITY_OPTIONS와 같아야 합니다 (api/test/quote.test.js가 확인).
   var QUANTITY_OPTIONS = ["50명 미만", "50~100명", "100~300명", "300명 이상", "미정 / 상담 후 결정"];
-  var CONTEXT_LABELS = { category:"카테고리", people:"인원", goal:"목표", voucher:"수출바우처" };
+  // 수출바우처 문구는 여기서만 고칩니다. api/server.js, tool.html의 VOUCHERS와 같아야 합니다 (api/test/quote.test.js가 확인).
+  var VOUCHERS = [
+    {"key":"kita","label":"한국무역협회 수출바우처","short":"한국무역협회"},
+    {"key":"kosme","label":"중소벤처기업진흥공단 수출바우처","short":"중소벤처기업진흥공단"}
+  ];
+  // people은 이전 버전 tool.html(캐시)이 보내는 값입니다.
+  var CONTEXT_LABELS = { category:"카테고리", tier:"인플루언서 등급", quantity:"시딩 수량", people:"인원", goal:"목표", voucher:"수출바우처" };
   var EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   var PHONE_RE = /^[0-9+()\-\s]+$/;
 
@@ -50,6 +57,7 @@
       } },
     { key:"quantity", label:"희망 진행 수량",    type:"select", required:true, options:QUANTITY_OPTIONS,
       validate:function(v){ return v ? "" : "희망 진행 수량을 선택해 주세요."; } },
+    { key:"vouchers", label:"수출바우처 보유 여부", type:"checkboxes", required:false, options:VOUCHERS },
     { key:"message",  label:"문의 내용",         type:"textarea", required:false, maxlength:3000, placeholder:"희망 플랫폼, 제품명, 예산, 진행 일정 등 자유롭게 작성해 주세요." }
   ];
 
@@ -59,7 +67,23 @@
   var ICON_CLOSE = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>';
   var ICON_CHECK = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg>';
 
+  function checkboxesHtml(f){
+    var id = "qf-" + f.key;
+    return '<div class="qf-field">' +
+      '<div class="qf-label" id="' + id + '-label">' + f.label + '<span class="qf-opt">(선택)</span></div>' +
+      '<div class="qf-checks" id="' + id + '" role="group" tabindex="-1" aria-labelledby="' + id + '-label" aria-describedby="' + id + '-err">' +
+        f.options.map(function(o){
+          return '<label class="qf-consent" for="' + id + '-' + o.key + '">' +
+            '<input type="checkbox" id="' + id + '-' + o.key + '" name="' + f.key + '" value="' + o.key + '"><span>' + o.label + '</span>' +
+          '</label>';
+        }).join("") +
+      '</div>' +
+      '<p class="qf-error" id="' + id + '-err"></p>' +
+    '</div>';
+  }
+
   function fieldHtml(f){
+    if(f.type === "checkboxes") return checkboxesHtml(f);
     var id = "qf-" + f.key;
     var attrs = 'id="' + id + '" name="' + f.key + '" class="qf-input" aria-describedby="' + id + '-err"' + (f.required ? ' aria-required="true"' : '') + (f.maxlength ? ' maxlength="' + f.maxlength + '"' : '');
     var control;
@@ -89,7 +113,7 @@
       '<details class="qf-notice">' +
         '<summary>수집·이용 안내 보기</summary>' +
         '<ul>' +
-          '<li><b>수집 항목</b>업체명·브랜드명, 담당자명, 연락처, 이메일, 문의 내용</li>' +
+          '<li><b>수집 항목</b>업체명·브랜드명, 담당자명, 연락처, 이메일, 희망 진행 수량, 수출바우처 보유 여부, 문의 내용, 예상 실적 계산 조건(예상 실적 확인 페이지에서 문의한 경우)</li>' +
           '<li><b>이용 목적</b>견적 상담 및 회신</li>' +
           '<li><b>보유 기간</b>상담 종료 후 1년</li>' +
         '</ul>' +
@@ -136,6 +160,7 @@
   var prefilled = "";
   var finished = false;
   var source = IS_LANDING ? "index" : "tool";
+  var voucherSynced = null; // 폼에 마지막으로 옮긴 계산기 스위치 값
 
   function setError(id, msg){
     var el = dialog.querySelector("#" + id);
@@ -171,12 +196,37 @@
     success.hidden = true;
     dialog.setAttribute("aria-labelledby", "qf-title");
     prefilled = "";
+    voucherSynced = null;
     finished = false;
+  }
+
+  function voucherBoxes(){
+    return Array.prototype.slice.call(dialog.querySelectorAll('input[name="vouchers"]'));
+  }
+
+  // 계산기 스위치가 바뀌었을 때만 옮깁니다. 스위치 그대로면 사용자가 폼에서 고친 값을 덮어쓰지 않습니다.
+  function syncVouchers(){
+    if(typeof window.encluQuoteVouchers !== "function") return;
+    var keys = window.encluQuoteVouchers();
+    var synced = keys.join(",");
+    if(synced === voucherSynced) return;
+    voucherSynced = synced;
+    voucherBoxes().forEach(function(box){ box.checked = keys.indexOf(box.value) !== -1; });
+  }
+
+  // api/server.js의 formatVouchers와 같은 표기입니다.
+  function voucherSummary(keys){
+    if(!keys.length) return "미보유";
+    return VOUCHERS.map(function(o){ return o.short + (keys.indexOf(o.key) !== -1 ? " 보유" : " 미보유"); }).join(", ");
   }
 
   function buildPayload(){
     var payload = {};
-    FIELDS.forEach(function(f){ payload[f.key] = dialog.querySelector("#qf-" + f.key).value.trim(); });
+    FIELDS.forEach(function(f){
+      if(f.type === "checkboxes") return;
+      payload[f.key] = dialog.querySelector("#qf-" + f.key).value.trim();
+    });
+    payload.vouchers = voucherBoxes().filter(function(box){ return box.checked; }).map(function(box){ return box.value; });
     payload.consent = dialog.querySelector("#qf-consent").checked;
     payload.source = source;
     payload.website = dialog.querySelector("#qf-website").value;
@@ -186,11 +236,15 @@
 
   function buildMailto(payload){
     var subject = "[일본 시딩 견적 문의] " + payload.company;
-    var lines = FIELDS.map(function(f){ return f.label + ": " + (payload[f.key] || "-"); });
+    var lines = FIELDS.map(function(f){
+      return f.label + ": " + (f.type === "checkboxes" ? voucherSummary(payload[f.key]) : (payload[f.key] || "-"));
+    });
     lines.push("개인정보 수집·이용 동의: 동의함");
     if(payload.context){
       lines.push("", "=== 예상 실적 확인에서 선택한 조건 ===");
-      Object.keys(CONTEXT_LABELS).forEach(function(k){ lines.push(CONTEXT_LABELS[k] + ": " + payload.context[k]); });
+      Object.keys(CONTEXT_LABELS).forEach(function(k){
+        if(payload.context[k] !== undefined) lines.push(CONTEXT_LABELS[k] + ": " + payload.context[k]);
+      });
     }
     lines.push("", "페이지: " + window.location.href, "요청 시각: " + new Date().toISOString());
     return "mailto:" + CONSULT_EMAIL + "?subject=" + encodeURIComponent(subject) + "&body=" + encodeURIComponent(lines.join("\n"));
@@ -276,7 +330,8 @@
   // 입력을 고치는 즉시 해당 항목의 오류를 지웁니다.
   function clearOnEdit(e){
     var t = e.target;
-    if(t.id && t.getAttribute("aria-invalid") === "true") setError(t.id, "");
+    if(t.name === "vouchers") setError("qf-vouchers", "");
+    else if(t.id && t.getAttribute("aria-invalid") === "true") setError(t.id, "");
   }
   form.addEventListener("input", clearOnEdit);
   form.addEventListener("change", clearOnEdit);
@@ -328,6 +383,7 @@
   function open(opts, resume){
     goTop = false;
     if(finished) resetForm();
+    syncVouchers();
     source = (opts && opts.source) || (IS_LANDING ? "index" : "tool");
     var message = opts && opts.message;
     // 사용자가 직접 쓴 문의 내용은 덮어쓰지 않습니다.
