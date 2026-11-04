@@ -15,13 +15,13 @@
 
 ## 페이지
 
-- [ENCLU 랜딩 페이지](https://jjunghwa0928.github.io/seeding-landing/): 서비스 소개, 숏폼 리뷰, 카테고리별 리뷰, 시딩 포함 항목, 5단계 진행 과정, 수출바우처 안내, 함께한 브랜드, 자주 묻는 질문(FAQ), 견적 문의.
-- [예상 실적 확인](https://jjunghwa0928.github.io/seeding-landing/tool.html): 카테고리·인플루언서 인원·캠페인 목표·수출바우처 적용 여부를 선택하면 AI 예측 데이터(게시 후 30일 기준)로 예상 도달과 예상 참여가 바로 계산됩니다. 예상 비용 범위와 세부 지표는 견적 문의(업체명·브랜드명, 연락처, 이메일, 희망 진행 수량) 후 공개됩니다.
+- [ENCLU 랜딩 페이지](https://influencer.enclu.com/): 서비스 소개, 숏폼 리뷰, 카테고리별 리뷰, 시딩 포함 항목, 5단계 진행 과정, 수출바우처 안내, 함께한 브랜드, 자주 묻는 질문(FAQ), 견적 문의.
+- [예상 실적 확인](https://influencer.enclu.com/tool.html): 카테고리·인플루언서 인원·캠페인 목표·수출바우처 적용 여부를 선택하면 AI 예측 데이터(게시 후 30일 기준)로 예상 도달과 예상 참여가 바로 계산됩니다. 예상 비용 범위와 세부 지표는 견적 문의(업체명·브랜드명, 연락처, 이메일, 희망 진행 수량) 후 공개됩니다.
 
 ## 기계 판독용 파일
 
-- [llms-full.txt](https://jjunghwa0928.github.io/seeding-landing/llms-full.txt): 서비스·진행 과정·FAQ·연락처를 담은 전체 텍스트 설명.
-- [sitemap.xml](https://jjunghwa0928.github.io/seeding-landing/sitemap.xml): 페이지 목록.
+- [llms-full.txt](https://influencer.enclu.com/llms-full.txt): 서비스·진행 과정·FAQ·연락처를 담은 전체 텍스트 설명.
+- [sitemap.xml](https://influencer.enclu.com/sitemap.xml): 페이지 목록.
 
 ## 연락처
 

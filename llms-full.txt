@@ -1,6 +1,6 @@
 # ENCLU — K-뷰티 인플루언서 시딩 (전체 설명)
 
-사이트: https://jjunghwa0928.github.io/seeding-landing/
+사이트: https://influencer.enclu.com/
 언어: 한국어
 최종 갱신: 2026-11-03
 
@@ -39,7 +39,7 @@
 
 ## 예상 실적 확인 도구
 
-URL: https://jjunghwa0928.github.io/seeding-landing/tool.html
+URL: https://influencer.enclu.com/tool.html
 
 카테고리, 인플루언서 인원, 캠페인 목표, 수출바우처 적용 여부를 선택하면 AI 예측 데이터(게시 후 30일 기준)로 예상 도달과 예상 참여가 바로 계산됩니다. 예상 비용 범위, 예상 게시물 수, 예상 저장·공유, 예상 프로필 방문, 예상 링크 클릭, 예상 콘텐츠 확보 수(사진·영상)는 견적 문의 후 공개됩니다. 확정 수치가 아닌 예측값이며, 실제 성과는 제품·시기·인플루언서 반응에 따라 다릅니다. 상세 견적서와 카테고리별 실제 캠페인 데이터는 회사 이메일로 보내드립니다.
 
@@ -90,7 +90,7 @@ A. 카카오톡 채널 또는 상담 문의를 통해 브랜드명, 진행 제�
 
 ## 페이지 목록
 
-- 랜딩: https://jjunghwa0928.github.io/seeding-landing/
-- 예상 실적 확인: https://jjunghwa0928.github.io/seeding-landing/tool.html
-- llms.txt: https://jjunghwa0928.github.io/seeding-landing/llms.txt
-- sitemap: https://jjunghwa0928.github.io/seeding-landing/sitemap.xml
+- 랜딩: https://influencer.enclu.com/
+- 예상 실적 확인: https://influencer.enclu.com/tool.html
+- llms.txt: https://influencer.enclu.com/llms.txt
+- sitemap: https://influencer.enclu.com/sitemap.xml
