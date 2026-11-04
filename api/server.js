@@ -38,8 +38,14 @@ const LIMITS = {
 
 // assets/quote-form.js 의 QUANTITY_OPTIONS 와 같아야 한다 (test/quote.test.js 가 확인).
 const QUANTITY_OPTIONS = ['50명 미만', '50~100명', '100~300명', '300명 이상', '미정 / 상담 후 결정'];
-const CONTEXT_LABELS = { category: '카테고리', people: '인원', goal: '목표', voucher: '수출바우처' };
+// people 은 이전 버전 tool.html(캐시)이 보내는 값이다.
+const CONTEXT_LABELS = { category: '카테고리', tier: '인플루언서 등급', quantity: '시딩 수량', people: '인원', goal: '목표', voucher: '수출바우처' };
 const SOURCE_LABELS = { index: '랜딩 페이지', tool: '예상 실적 확인', voucher: '수출바우처 문의' };
+// 수출바우처 문구는 여기서만 고친다. assets/quote-form.js, tool.html 의 VOUCHERS 와 같아야 한다 (test/quote.test.js 가 확인).
+const VOUCHERS = [
+  {"key":"kita","label":"한국무역협회 수출바우처","short":"한국무역협회"},
+  {"key":"kosme","label":"중소벤처기업진흥공단 수출바우처","short":"중소벤처기업진흥공단"}
+];
 
 const DUPLICATE_WINDOW_MS = 10 * 60 * 1000;
 
@@ -149,6 +155,21 @@ function sanitizeContext(v) {
   return Object.keys(out).length ? out : null;
 }
 
+/** 수출바우처 보유: 없으면 [], 허용 키만 중복 없이 받는다. 형식이 틀리면 null */
+function parseVouchers(v) {
+  if (v === undefined) return [];
+  if (!Array.isArray(v) || new Set(v).size !== v.length) return null;
+  const keys = VOUCHERS.map((item) => item.key);
+  if (!v.every((key) => keys.includes(key))) return null;
+  return keys.filter((key) => v.includes(key)); // 순서가 달라도 중복 판정이 같도록 정렬
+}
+
+/** 메일 표기: "한국무역협회 보유, 중소벤처기업진흥공단 미보유" / 전부 없으면 "미보유" */
+function formatVouchers(keys) {
+  if (!keys.length) return '미보유';
+  return VOUCHERS.map((item) => `${item.short} ${keys.includes(item.key) ? '보유' : '미보유'}`).join(', ');
+}
+
 /**
  * 입력 검증. 통과하면 { ok:true, data }, 실패하면 { ok:false, fields }.
  * fields 의 문구는 폼(assets/quote-form.js)의 안내와 같고 그대로 화면에 표시된다.
@@ -160,6 +181,7 @@ function validateQuote(body) {
     phone: singleLine(body.phone),
     email: singleLine(body.email),
     quantity: singleLine(body.quantity),
+    vouchers: parseVouchers(body.vouchers),
     message: typeof body.message === 'string' ? body.message.replace(/\r\n?/g, '\n').trim() : '',
     context: sanitizeContext(body.context),
     source: typeof body.source === 'string' && Object.prototype.hasOwnProperty.call(SOURCE_LABELS, body.source) ? body.source : 'unknown'
@@ -184,6 +206,7 @@ function validateQuote(body) {
   }
 
   if (!QUANTITY_OPTIONS.includes(data.quantity)) fields.quantity = '희망 진행 수량을 선택해 주세요.';
+  if (!data.vouchers) fields.vouchers = '수출바우처 보유 여부를 다시 선택해 주세요.';
   if (data.message.length > LIMITS.message) fields.message = `${LIMITS.message}자 이내로 입력해 주세요.`;
   if (body.consent !== true) fields.consent = '개인정보 수집·이용에 동의해 주세요.';
 
@@ -206,6 +229,7 @@ function buildMail(config, data, meta) {
     ['연락처', data.phone],
     ['이메일', data.email],
     ['희망 진행 수량', data.quantity],
+    ['수출바우처 보유', formatVouchers(data.vouchers)],
     ['개인정보 수집·이용 동의', '동의함'],
     ['문의 경로', SOURCE_LABELS[data.source] || '-']
   ];
@@ -260,7 +284,7 @@ function createDuplicateGuard(windowMs = DUPLICATE_WINDOW_MS) {
   function hashOf(data) {
     return crypto
       .createHash('sha256')
-      .update(JSON.stringify([data.email.toLowerCase(), data.company, data.contactName, data.quantity, data.message]))
+      .update(JSON.stringify([data.email.toLowerCase(), data.company, data.contactName, data.quantity, data.vouchers, data.message]))
       .digest('hex');
   }
 
@@ -456,4 +480,4 @@ function start() {
 
 if (require.main === module) start();
 
-module.exports = { createApp, loadConfig, startupError, validateQuote, buildMail, clientIp, createDuplicateGuard, LIMITS, QUANTITY_OPTIONS };
+module.exports = { createApp, loadConfig, startupError, validateQuote, buildMail, clientIp, createDuplicateGuard, LIMITS, QUANTITY_OPTIONS, VOUCHERS };
