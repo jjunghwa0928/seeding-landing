@@ -50,7 +50,7 @@
 | — | `idempotencyKey` | 새로 생성 |
 | `source` (`index`/`tool`) | `inquiryType` 또는 별도 필드 | 허브 유형 목록에 "시딩 견적"이 있어야 한다. 경로(index/tool)를 남길 필드가 설계안에 없다 → **허브 쪽 확인 필요** |
 | `company` | `company` | 같음 |
-| — | `customerName` | **현재 폼에 이름 칸이 없다.** 허브가 필수로 정하면 폼에 칸을 추가해야 한다 |
+| `contactName` (담당자명) | `contactName` | 같음. 설계안 예시의 `customerName`이 아니라 axhub `sales-lead/2`에 이미 있는 `contactName`을 쓴다. 2026-11-04 필수로 결정했고 폼에 칸을 추가했다 |
 | `phone` | `phone` | 같음 |
 | `email` | `email` | 같음 |
 | `quantity` (선택 5종) | 없음 | `message` 앞에 붙이거나 허브에 사이트별 추가 필드가 필요 → **허브 쪽 확인 필요** |
@@ -65,7 +65,7 @@
 ## 4. 허브 쪽에 넘길 확인 사항
 
 1. 사이트별 추가 필드(`quantity`, 계산기 조건, 문의 경로)를 어떻게 받을지.
-2. `customerName`이 필수인지. 필수면 이 폼에 담당자명 칸을 추가한다.
+2. (해결, 2026-11-04) 담당자 이름은 허브의 `contactName`(axhub `sales-lead/2`)으로 보내고 필수로 한다. 폼에 담당자명 칸을 추가했다.
 3. 허브 CORS 허용 Origin에 `https://influencer.enclu.com`을 넣는다. GitHub Pages(`https://jjunghwa0928.github.io`)도 넣을지.
 4. 허브 공개 경로의 IP 허용 목록 제외 (설계안 S15·U14).
 

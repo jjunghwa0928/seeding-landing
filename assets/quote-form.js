@@ -35,6 +35,8 @@
   var FIELDS = [
     { key:"company",  label:"업체명 / 브랜드명", type:"text",  required:true, maxlength:100, autocomplete:"organization", placeholder:"예) OOO코스메틱 / OOO브랜드",
       validate:function(v){ return v ? "" : "업체명 또는 브랜드명을 입력해 주세요."; } },
+    { key:"contactName", label:"담당자명",       type:"text",  required:true, maxlength:100, autocomplete:"name", placeholder:"예) 홍길동",
+      validate:function(v){ return v ? "" : "담당자명을 입력해 주세요."; } },
     { key:"phone",    label:"연락처",           type:"tel",   required:true, maxlength:30, autocomplete:"tel", placeholder:"예) 010-0000-0000",
       validate:function(v){
         if(!v) return "연락처를 입력해 주세요.";
@@ -87,7 +89,7 @@
       '<details class="qf-notice">' +
         '<summary>수집·이용 안내 보기</summary>' +
         '<ul>' +
-          '<li><b>수집 항목</b>업체명·브랜드명, 연락처, 이메일, 문의 내용</li>' +
+          '<li><b>수집 항목</b>업체명·브랜드명, 담당자명, 연락처, 이메일, 문의 내용</li>' +
           '<li><b>이용 목적</b>견적 상담 및 회신</li>' +
           '<li><b>보유 기간</b>상담 종료 후 1년</li>' +
         '</ul>' +
