@@ -81,8 +81,8 @@ npm test     # node:test, 네트워크 없이 실행
 
 ffmpeg가 필요하다. 주간 리뷰 cron은 이 영역을 건드리지 않는다.
 
-1. 원본 영상을 `assets/reels/src/`에 넣는다 (`.mp4 .mov .m4v .webm`, 파일명 순서대로 노출). 이 폴더는 git에 올라가지 않으니 없으면 만든다.
-2. (선택) 카드를 인스타그램으로 연결하려면 `links.txt`에 URL을 한 줄에 하나씩 파일명 순서대로 적는다. 빈 줄은 링크 없는 카드다.
+1. 원본 영상을 `assets/reels/src/`에 넣는다 (`.mp4 .mov .m4v .webm`, 파일명 앞 숫자 순서대로 노출: `1_...`, `2_...`, ..., `10_...`. 숫자가 없는 파일은 그 뒤에 이름순). 이 폴더는 git에 올라가지 않으니 없으면 만든다.
+2. (선택) 카드를 인스타그램으로 연결하려면 `links.txt`에 URL을 한 줄에 하나씩 위와 같은 순서(파일명 앞 숫자)대로 적는다. 빈 줄은 링크 없는 카드다.
 3. `python3 scripts/bake_reels.py` 실행 (`links.txt`를 쓰면 `--links links.txt` 추가).
 4. `index.html`과 `assets/reels/`의 결과물을 커밋한다. 더 이상 쓰지 않는 파일은 스크립트가 알려주니 `git rm`으로 지운다.
 
