@@ -28,6 +28,7 @@ const CONTROL_RE = /[\u0000-\u001f\u007f\u2028\u2029]+/g;
 
 const LIMITS = {
   company: 100,
+  contactName: 100,
   email: 200,
   phone: 30,
   message: 3000,
@@ -155,6 +156,7 @@ function sanitizeContext(v) {
 function validateQuote(body) {
   const data = {
     company: singleLine(body.company),
+    contactName: singleLine(body.contactName),
     phone: singleLine(body.phone),
     email: singleLine(body.email),
     quantity: singleLine(body.quantity),
@@ -166,6 +168,9 @@ function validateQuote(body) {
   const fields = {};
   if (!data.company) fields.company = '업체명 또는 브랜드명을 입력해 주세요.';
   else if (data.company.length > LIMITS.company) fields.company = `${LIMITS.company}자 이내로 입력해 주세요.`;
+
+  if (!data.contactName) fields.contactName = '담당자명을 입력해 주세요.';
+  else if (data.contactName.length > LIMITS.contactName) fields.contactName = `${LIMITS.contactName}자 이내로 입력해 주세요.`;
 
   const digits = data.phone.replace(/\D/g, '').length;
   if (!data.phone) fields.phone = '연락처를 입력해 주세요.';
@@ -197,6 +202,7 @@ function escapeHtml(s) {
 function buildMail(config, data, meta) {
   const rows = [
     ['업체명 / 브랜드명', data.company],
+    ['담당자명', data.contactName],
     ['연락처', data.phone],
     ['이메일', data.email],
     ['희망 진행 수량', data.quantity],
@@ -254,7 +260,7 @@ function createDuplicateGuard(windowMs = DUPLICATE_WINDOW_MS) {
   function hashOf(data) {
     return crypto
       .createHash('sha256')
-      .update(JSON.stringify([data.email.toLowerCase(), data.company, data.quantity, data.message]))
+      .update(JSON.stringify([data.email.toLowerCase(), data.company, data.contactName, data.quantity, data.message]))
       .digest('hex');
   }
 

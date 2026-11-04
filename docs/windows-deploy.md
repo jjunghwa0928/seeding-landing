@@ -133,7 +133,7 @@ curl -o NUL -s -w "%{http_code}\n" -H "Host: influencer.enclu.com" http://localh
 실제 메일 발송 확인:
 
 ```bat
-curl -X POST -H "Host: influencer.enclu.com" -H "Content-Type: application/json" http://localhost/api/quote -d "{\"company\":\"배포테스트\",\"phone\":\"010-0000-0000\",\"email\":\"mkt2@enclu.co.kr\",\"quantity\":\"50명 미만\",\"consent\":true}"
+curl -X POST -H "Host: influencer.enclu.com" -H "Content-Type: application/json" http://localhost/api/quote -d "{\"company\":\"배포테스트\",\"contactName\":\"배포테스트\",\"phone\":\"010-0000-0000\",\"email\":\"mkt2@enclu.co.kr\",\"quantity\":\"50명 미만\",\"consent\":true}"
 ```
 
 `{"ok":true}`가 나오고 mkt2@enclu.co.kr에 "[시딩 견적 문의] 배포테스트 / 50명 미만" 메일이 도착하면 성공입니다.

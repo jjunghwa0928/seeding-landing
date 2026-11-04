@@ -45,7 +45,7 @@ curl https://<도메인>/api/health
 둘 다 `{"ok":true}`가 와야 한다. 실제 발송 확인:
 
 ```bat
-curl -X POST https://<도메인>/api/quote -H "Content-Type: application/json" -d "{\"company\":\"테스트\",\"phone\":\"010-0000-0000\",\"email\":\"test@example.com\",\"quantity\":\"50명 미만\",\"consent\":true}"
+curl -X POST https://<도메인>/api/quote -H "Content-Type: application/json" -d "{\"company\":\"테스트\",\"contactName\":\"테스트\",\"phone\":\"010-0000-0000\",\"email\":\"test@example.com\",\"quantity\":\"50명 미만\",\"consent\":true}"
 ```
 
 로그는 `pm2 logs seeding-quote-api`로 본다. 문의 내용·이메일·비밀값은 기록하지 않고, 접수 IP와 거부 사유만 남는다.

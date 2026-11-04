@@ -37,6 +37,7 @@ function baseConfig(overrides = {}) {
 function validPayload(overrides = {}) {
   return {
     company: '엔클루코스메틱',
+    contactName: '홍길동',
     phone: '010-0000-0000',
     email: 'hong@example.com',
     quantity: '50~100명',
@@ -135,6 +136,8 @@ describe('quote api', () => {
     assert.equal(mail.from, 'mkt2@enclu.co.kr');
     assert.equal(mail.replyTo, 'hong@example.com');
     assert.equal(mail.subject, '[시딩 견적 문의] 엔클루코스메틱 / 50~100명');
+    assert.ok(mail.text.includes('업체명 / 브랜드명: 엔클루코스메틱\n담당자명: 홍길동\n'));
+    assert.ok(mail.html.includes('담당자명'));
     assert.ok(mail.text.includes('연락처: 010-0000-0000'));
     assert.ok(mail.text.includes('문의 경로: 랜딩 페이지'));
     assert.ok(mail.text.includes('일본 시딩을 고민 중입니다.'));
@@ -159,7 +162,27 @@ describe('quote api', () => {
   test('empty body reports every required field', async () => {
     const res = await request(server, 'POST', '/api/quote', {});
     assert.equal(res.status, 400);
-    assert.deepEqual(Object.keys(res.json.fields).sort(), ['company', 'consent', 'email', 'phone', 'quantity']);
+    assert.deepEqual(Object.keys(res.json.fields).sort(), ['company', 'consent', 'contactName', 'email', 'phone', 'quantity']);
+  });
+
+  test('missing contactName → 400 with its message, nothing sent', async () => {
+    for (const contactName of ['', '   ', undefined]) {
+      const res = await request(server, 'POST', '/api/quote', validPayload({ contactName }));
+      assert.equal(res.status, 400, JSON.stringify(contactName));
+      assert.deepEqual(res.json.fields, { contactName: '담당자명을 입력해 주세요.' });
+    }
+    assert.equal(sent.length, 0);
+  });
+
+  test('contactName over 100 chars → 400, exactly 100 is accepted', async () => {
+    let res = await request(server, 'POST', '/api/quote', validPayload({ contactName: 'x'.repeat(101) }));
+    assert.equal(res.status, 400);
+    assert.deepEqual(res.json.fields, { contactName: '100자 이내로 입력해 주세요.' });
+    assert.equal(sent.length, 0);
+
+    res = await request(server, 'POST', '/api/quote', validPayload({ contactName: 'x'.repeat(100) }));
+    assert.equal(res.status, 200);
+    assert.equal(sent.length, 1);
   });
 
   test('bad email → 400', async () => {
@@ -306,6 +329,14 @@ describe('quote api', () => {
     assert.equal(second.status, 429);
     assert.equal(second.json.error, 'duplicate');
     assert.equal(sent.length, 1);
+  });
+
+  test('duplicate guard: a different contactName is not a duplicate', async () => {
+    const first = await request(server, 'POST', '/api/quote', validPayload());
+    assert.equal(first.status, 200);
+    const second = await request(server, 'POST', '/api/quote', validPayload({ contactName: '김철수' }));
+    assert.equal(second.status, 200);
+    assert.equal(sent.length, 2);
   });
 
   test('smtp failure → 502 generic error, and an identical retry is not blocked', async () => {
