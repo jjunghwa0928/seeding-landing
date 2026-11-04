@@ -8,7 +8,7 @@
  *
  * 페이지가 window.encluQuoteContext()를 정의하면 제출 시점에 호출해
  * 반환값 {category, tier, quantity, goal, voucher}를 화면에 표시하지 않고 전송 내용에 덧붙입니다.
- * window.encluQuoteVouchers()를 정의하면 모달을 열 때 반환한 키(["kita"] 등)로 수출바우처 칸을 미리 체크합니다.
+ * window.encluQuoteVouchers()를 정의하면 모달을 열 때 반환한 키(["kosme"] 등)로 수출바우처 칸을 미리 체크합니다.
  *
  * 열 때 history 항목을 하나 추가해 브라우저 뒤로 가기가 페이지 이탈 대신 모달 닫기가 되게 합니다.
  * X/ESC/백드롭으로 닫으면 그 항목을 history.back()으로 되돌려 흔적을 남기지 않습니다.
@@ -30,9 +30,11 @@
   var QUANTITY_OPTIONS = ["50명 미만", "50~100명", "100~300명", "300명 이상", "미정 / 상담 후 결정"];
   // 수출바우처 문구는 여기서만 고칩니다. api/server.js, tool.html의 VOUCHERS와 같아야 합니다 (api/test/quote.test.js가 확인).
   var VOUCHERS = [
-    {"key":"kita","label":"한국무역협회 수출바우처","short":"한국무역협회"},
-    {"key":"kosme","label":"중소벤처기업진흥공단 수출바우처","short":"중소벤처기업진흥공단"}
+    {"key":"kosme","label":"중기부(중진공) 수출바우처","short":"중기부(중진공)"},
+    {"key":"kotra","label":"산업부(KOTRA) 수출바우처","short":"산업부(KOTRA)"}
   ];
+  // 광고성 정보 수신 동의 문구의 버전입니다. 문구를 고치면 함께 올립니다. api/server.js와 같아야 합니다 (api/test/quote.test.js가 확인).
+  var MARKETING_TEXT_VERSION = "marketing-2026-11-04";
   // people은 이전 버전 tool.html(캐시)이 보내는 값입니다.
   var CONTEXT_LABELS = { category:"카테고리", tier:"인플루언서 등급", quantity:"시딩 수량", people:"인원", goal:"목표", voucher:"수출바우처" };
   var EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -103,7 +105,8 @@
     '</div>';
   }
 
-  // TODO 법무 확인 필요: 개인정보 수집·이용 안내의 항목, 목적, 보유 기간 문구.
+  // TODO 법무 확인 필요: 개인정보 수집·이용 안내 전문(개인정보 보호법 제15조 제2항)과 광고성 정보 수신 동의 문구의 법무 검토가 끝나지 않았습니다.
+  // 항목을 고칠 때는 FIELDS와 api/server.js가 실제로 받는 값·남기는 기록(IP 로그 등)에 맞춰 주세요.
   var CONSENT_HTML =
     '<div class="qf-field">' +
       '<label class="qf-consent" for="qf-consent">' +
@@ -112,13 +115,55 @@
       '</label>' +
       '<details class="qf-notice">' +
         '<summary>수집·이용 안내 보기</summary>' +
-        '<ul>' +
-          '<li><b>수집 항목</b>업체명·브랜드명, 담당자명, 연락처, 이메일, 희망 진행 수량, 수출바우처 보유 여부, 문의 내용, 예상 실적 계산 조건(예상 실적 확인 페이지에서 문의한 경우)</li>' +
-          '<li><b>이용 목적</b>견적 상담 및 회신</li>' +
-          '<li><b>보유 기간</b>상담 종료 후 1년</li>' +
-        '</ul>' +
+        '<div class="qf-notice-body">' +
+          '<p>주식회사 엔클루(대표 김상원, 사업자등록번호 144-81-18866)는 견적 문의 처리를 위해 아래와 같이 개인정보를 수집·이용합니다.</p>' +
+          '<dl>' +
+            '<dt>수집·이용 목적</dt>' +
+            '<dd>견적 문의 접수 및 상담, 견적·제안서 회신, 문의 이력 관리(중복 문의 확인)</dd>' +
+            '<dt>수집 항목</dt>' +
+            '<dd><ul>' +
+              '<li><b>필수</b>업체명·브랜드명, 담당자명, 연락처, 이메일, 희망 진행 수량</li>' +
+              '<li><b>선택</b>수출바우처 보유 여부, 문의 내용, 예상 실적 계산 조건(예상 실적 확인 페이지에서 문의한 경우)</li>' +
+              '<li><b>자동 수집</b>접속 IP, 접수 일시(부정 이용·중복 접수 방지)</li>' +
+            '</ul></dd>' +
+            '<dt>보유·이용 기간</dt>' +
+            '<dd>상담 종료 후 1년간 보유하며, 이후 지체 없이 파기합니다. 단, 계약을 체결한 경우 관계 법령(전자상거래 등에서의 소비자보호에 관한 법률 등)에 따른 보존 기간 동안 보관합니다.</dd>' +
+            '<dt>동의를 거부할 권리 및 불이익</dt>' +
+            '<dd>동의를 거부할 수 있으며, 거부 시 견적 문의 접수가 제한됩니다.</dd>' +
+            '<dt>처리 방법 및 문의처</dt>' +
+            '<dd>입력하신 내용은 담당자 이메일로 전달되어 처리됩니다. 개인정보 관련 문의: ' + CONSULT_EMAIL + '</dd>' +
+          '</dl>' +
+        '</div>' +
       '</details>' +
       '<p class="qf-error" id="qf-consent-err"></p>' +
+    '</div>';
+
+  var MARKETING_CONSENT_HTML =
+    '<div class="qf-field">' +
+      '<label class="qf-consent" for="qf-marketingConsent">' +
+        '<input type="checkbox" id="qf-marketingConsent" name="marketingConsent" aria-describedby="qf-marketingConsent-err">' +
+        '<span>(선택) 엔클루 소식·혜택 안내 메일 수신 동의</span>' +
+      '</label>' +
+      '<details class="qf-notice">' +
+        '<summary>내용 보기</summary>' +
+        '<div class="qf-notice-body">' +
+          '<dl>' +
+            '<dt>목적</dt>' +
+            '<dd>엔클루 서비스 소식, 뉴스레터, 이벤트·혜택 등 광고성 정보 안내</dd>' +
+            '<dt>항목</dt>' +
+            '<dd>업체명·브랜드명, 담당자명, 이메일</dd>' +
+            '<dt>전송 방법</dt>' +
+            '<dd>이메일</dd>' +
+            '<dt>보유·이용 기간</dt>' +
+            '<dd>동의 철회 시 또는 마지막 수신 동의 확인 후 2년까지</dd>' +
+            '<dt>철회</dt>' +
+            '<dd>언제든지 수신 거부할 수 있으며, 메일 하단 수신 거부 링크 또는 회신으로 철회할 수 있습니다.</dd>' +
+            '<dt>거부 권리</dt>' +
+            '<dd>동의하지 않아도 견적 문의는 정상 접수됩니다.</dd>' +
+          '</dl>' +
+        '</div>' +
+      '</details>' +
+      '<p class="qf-error" id="qf-marketingConsent-err"></p>' +
     '</div>';
 
   var dialog = document.createElement("dialog");
@@ -137,6 +182,7 @@
         '<p class="qf-lead">간단한 정보만 남겨주시면 담당자가 상담을 도와드립니다.</p>' +
         FIELDS.map(fieldHtml).join("") +
         CONSENT_HTML +
+        MARKETING_CONSENT_HTML +
         '<div class="qf-hp" aria-hidden="true"><label for="qf-website">웹사이트</label><input type="text" id="qf-website" name="website" tabindex="-1" autocomplete="off" aria-hidden="true"></div>' +
         '<button type="submit" class="btn btn-blue qf-submit">견적 문의 하기</button>' +
         '<p class="qf-status" id="qf-status" role="alert"></p>' +
@@ -189,6 +235,7 @@
     form.reset();
     FIELDS.forEach(function(f){ setError("qf-" + f.key, ""); });
     setError("qf-consent", "");
+    setError("qf-marketingConsent", "");
     statusEl.textContent = "";
     submitBtn.disabled = false;
     submitBtn.textContent = "견적 문의 하기";
@@ -228,6 +275,12 @@
     });
     payload.vouchers = voucherBoxes().filter(function(box){ return box.checked; }).map(function(box){ return box.value; });
     payload.consent = dialog.querySelector("#qf-consent").checked;
+    var agreed = dialog.querySelector("#qf-marketingConsent").checked;
+    payload.marketingConsent = {
+      agreed: agreed,
+      agreedAt: agreed ? new Date().toISOString() : null,
+      textVersion: agreed ? MARKETING_TEXT_VERSION : null
+    };
     payload.source = source;
     payload.website = dialog.querySelector("#qf-website").value;
     if(typeof window.encluQuoteContext === "function") payload.context = window.encluQuoteContext();
@@ -240,6 +293,7 @@
       return f.label + ": " + (f.type === "checkboxes" ? voucherSummary(payload[f.key]) : (payload[f.key] || "-"));
     });
     lines.push("개인정보 수집·이용 동의: 동의함");
+    lines.push("광고성 정보 수신 동의: " + (payload.marketingConsent.agreed ? "동의 (문구 " + payload.marketingConsent.textVersion + ")" : "미동의"));
     if(payload.context){
       lines.push("", "=== 예상 실적 확인에서 선택한 조건 ===");
       Object.keys(CONTEXT_LABELS).forEach(function(k){
@@ -318,7 +372,7 @@
   // 서버가 돌려준 항목별 오류를 폼의 오류 자리에 표시합니다.
   function showServerErrors(fields){
     var firstInvalid = null;
-    FIELDS.map(function(f){ return f.key; }).concat("consent").forEach(function(key){
+    FIELDS.map(function(f){ return f.key; }).concat("consent", "marketingConsent").forEach(function(key){
       if(!fields || !fields[key]) return;
       setError("qf-" + key, String(fields[key]));
       if(!firstInvalid) firstInvalid = dialog.querySelector("#qf-" + key);

@@ -53,7 +53,7 @@
   "browserRequirements": "Requires JavaScript",
   "inLanguage": "ko",
   "description": "카테고리, 인플루언서 등급, 시딩 수량, 캠페인 목표, 수출바우처 보유 여부를 선택하면 AI 예측 데이터(게시 후 30일 기준)로 예상 도달과 예상 참여를 바로 보여줍니다. 예상 비용 범위, 예상 게시물 수, 저장·공유, 프로필 방문, 링크 클릭, 콘텐츠 확보 수는 견적 문의 후 공개됩니다. 견적 문의에는 업체명·브랜드명, 담당자명, 연락처, 이메일, 희망 진행 수량이 필요하고 수출바우처 보유 여부와 문의 내용은 선택 입력이며, 계산기에서 선택한 조건이 함께 전달됩니다. 실제 성과는 제품·시기·인플루언서 반응에 따라 다릅니다.",
-  "featureList": ["카테고리 선택", "인플루언서 등급 선택", "시딩 수량 선택", "캠페인 목표 선택", "수출바우처 보유 여부 선택(한국무역협회·중소벤처기업진흥공단)", "예상 도달 · 예상 참여 즉시 계산", "간단한 견적 문의(업체명·브랜드명, 담당자명, 연락처, 이메일, 희망 진행 수량, 수출바우처 보유 여부, 문의 내용)", "선택한 계산기 조건 자동 첨부"],
+  "featureList": ["카테고리 선택", "인플루언서 등급 선택", "시딩 수량 선택", "캠페인 목표 선택", "수출바우처 보유 여부 선택(중기부·산업부)", "예상 도달 · 예상 참여 즉시 계산", "간단한 견적 문의(업체명·브랜드명, 담당자명, 연락처, 이메일, 희망 진행 수량, 수출바우처 보유 여부, 문의 내용)", "선택한 계산기 조건 자동 첨부"],
   "provider": {"@id": "https://influencer.enclu.com/#organization"},
   "isPartOf": {"@id": "https://influencer.enclu.com/#website"}
 }
@@ -236,10 +236,11 @@
     .results-panel{position:static;top:auto;}
   }
   .results-panel .ai-tag-wrap{margin-bottom:14px;}
-  .live-metrics{display:flex;flex-wrap:wrap;gap:14px;margin-bottom:20px;}
-  .live-metrics > div{flex:1 1 auto;min-width:0;}
+  /* 두 칸 고정: 칸 너비에 맞춘 글자 크기로 가장 긴 값("3,987,000명 이상")도 한 줄에 들어가고, 값이 바뀌어도 높이가 그대로입니다 */
+  .live-metrics{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:20px;}
+  .live-metrics > div{min-width:0;container-type:inline-size;}
   .results-note{font-size:13px;line-height:1.5;color:var(--ink-muted-80);margin:0 0 20px;}
-  .live-metric-num{font-size:clamp(32px,3.6vw,46px);font-weight:600;letter-spacing:-0.03em;color:var(--ink);line-height:1.05;white-space:nowrap;}
+  .live-metric-num{font-size:20px;font-size:clamp(17px,14.5cqi,46px);height:1.05em;font-weight:600;letter-spacing:-0.03em;color:var(--ink);line-height:1.05;white-space:nowrap;font-variant-numeric:tabular-nums;}
   .live-metric-num .suffix{font-size:0.4em;font-weight:500;color:var(--ink-muted-56);letter-spacing:-0.01em;white-space:nowrap;}
   .live-metric-lbl{font-size:13px;font-weight:500;color:var(--ink-muted-80);margin-top:4px;}
 
@@ -389,7 +390,6 @@
     .voucher-text{font-size:12px;max-width:none;}
     .results-panel{top:64px;padding:clamp(18px,2.6vh,28px) 28px;}
     .results-panel .ai-tag-wrap{margin-bottom:clamp(8px,1.4vh,14px);}
-    .live-metric-num{font-size:clamp(30px,5vh,46px);}
     .live-metrics{margin-bottom:clamp(10px,1.8vh,20px);}
     .cost-hero{margin:0 0 clamp(10px,2vh,22px);}
     .cost-hero-num{font-size:clamp(28px,4.4vh,48px);}
@@ -450,11 +450,11 @@
   @media (max-width:734px){
     .sticky-cta{align-items:center;gap:12px;}
     .sticky-cta .btn{width:auto;flex:1 1 auto;}
-    .sticky-metrics{display:flex;gap:14px;flex:0 1 auto;min-width:0;transition:opacity var(--dur-2) var(--ease);}
+    .sticky-metrics{display:grid;grid-template-columns:1fr 1fr;gap:14px;flex:0 0 176px;min-width:0;transition:opacity var(--dur-2) var(--ease);}
     .sticky-cta.metrics-off .sticky-metrics{display:none;}
     .sticky-cta.metrics-off .btn{width:100%;}
     .sticky-metric{min-width:0;}
-    .sticky-metric-num{font-size:16px;font-weight:600;letter-spacing:-0.02em;color:var(--ink);white-space:nowrap;font-variant-numeric:tabular-nums;line-height:1.15;}
+    .sticky-metric-num{font-size:16px;height:1.15em;font-weight:600;letter-spacing:-0.02em;color:var(--ink);white-space:nowrap;font-variant-numeric:tabular-nums;line-height:1.15;}
     .sticky-metric-lbl{font-size:11px;color:var(--ink-muted-56);line-height:1.2;}
   }
 </style>
@@ -522,7 +522,7 @@
           <div class="planner-row" style="margin-bottom:0;">
             <div class="planner-label" id="voucher-label">수출바우처 보유 여부</div>
             <div class="voucher-switches" id="voucher-switches" role="group" aria-labelledby="voucher-label"></div>
-            <div class="voucher-text">엔클루는 <strong>한국무역협회·중소벤처기업진흥공단</strong> <strong>공식 수행기관</strong>입니다.</div>
+            <div class="voucher-text">엔클루는 <strong>KOTRA·중소벤처기업진흥공단</strong> <strong>수출바우처 공식 수행기관</strong>입니다.</div>
           </div>
         </div>
 
@@ -671,11 +671,14 @@
 
   var PLATFORM_MIX = { instagram:0.45, tiktok:0.30, youtube:0.15, x:0.10 };
 
-  // PLACEHOLDER — 등급별 실데이터 없음 (mult: 도달·참여 배수, null이면 별도 협의)
+  // PLACEHOLDER — 실데이터가 나오기 전까지 보수적으로 잡은 추정값입니다. 벤치마크 하한에 곱하는 안전 계수.
+  var CONSERVATIVE = 0.35;
+
+  // PLACEHOLDER — 등급별 실데이터 없음, 보수적 추정 (mult: 도달·참여 배수, null이면 별도 협의)
   var TIER = {
     nano: { label:"나노",     sub:"1천~1만 미만",    mult:0.4 },
     micro:{ label:"마이크로", sub:"1만~10만 미만",   mult:1.0 },
-    macro:{ label:"매크로",   sub:"10만~100만 미만", mult:3.5 },
+    macro:{ label:"매크로",   sub:"10만~100만 미만", mult:2.5 },
     mega: { label:"메가·셀럽", sub:"100만 이상",     mult:null }
   };
   var NEGOTIABLE = "별도 협의";
@@ -697,8 +700,8 @@
 
   // 수출바우처 문구는 여기서만 고칩니다. api/server.js, assets/quote-form.js의 VOUCHERS와 같아야 합니다 (api/test/quote.test.js가 확인).
   var VOUCHERS = [
-    {"key":"kita","label":"한국무역협회 수출바우처","short":"한국무역협회"},
-    {"key":"kosme","label":"중소벤처기업진흥공단 수출바우처","short":"중소벤처기업진흥공단"}
+    {"key":"kosme","label":"중기부(중진공) 수출바우처","short":"중기부(중진공)"},
+    {"key":"kotra","label":"산업부(KOTRA) 수출바우처","short":"산업부(KOTRA)"}
   ];
 
   var state = { category:"skincare", tier:"micro", qty:50, goal:"awareness", vouchers:{} };
@@ -799,12 +802,10 @@
     var likesPer = platformAgg(catKey, "likes");
     var commentsPer = platformAgg(catKey, "comments");
 
-    // 보수적 표시: 벤치마크 하한에 안전 계수(0.5)를 곱하고 아래로 내림한 값만 노출한다.
-    var CONSERVATIVE = 0.5;
-    function floorTo(v, unit){ return Math.floor(v / unit) * unit; }
-    var reachLow = floorTo(reachPer[0] * nLow * mult * CONSERVATIVE, 100);
+    // 보수적 표시: 벤치마크 하한에 안전 계수를 곱한다. 화면 표시의 절삭은 truncateEstimate()가 맡는다.
+    var reachLow = reachPer[0] * nLow * mult * CONSERVATIVE;
     var reachHigh = reachPer[1] * nHigh * mult;
-    var engLow = floorTo((likesPer[0] + commentsPer[0]) * nLow * mult * CONSERVATIVE, 10);
+    var engLow = (likesPer[0] + commentsPer[0]) * nLow * mult * CONSERVATIVE;
     var engHigh = (likesPer[1] + commentsPer[1]) * nHigh * mult;
 
 
@@ -818,35 +819,45 @@
   // ---------------- conservative AI 예측 rendering (low end + "이상") ----------------
   var prefersReducedEarly = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-  // count-up: numbers rise from the previous value to the new one (900ms, ease-out)
-  function setStatSoft(el, text, suffix){
-    function put(t){ el.textContent = t; if(suffix){ var sp = document.createElement('span'); sp.className = 'suffix'; sp.textContent = suffix; el.appendChild(sp); } }
-    var m = /^([\d,]+)(.*)$/.exec(text);
+  // 100단위 절삭: 1,000 이상은 1,000단위, 1,000 미만은 100단위로 내림하고 100 미만은 "100명 미만"으로 표시한다.
+  function truncateEstimate(value, unit){
+    var n = Math.floor(value); // 반올림하지 않는다 — 999.6이 1,000으로 올라가면 안 된다
+    if(n < 100) return { text:"100" + unit, suffix:" 미만" };
+    var step = n < 1000 ? 100 : 1000;
+    return { text:fmt(Math.floor(n / step) * step) + unit, suffix:" 이상" };
+  }
+
+  function putStat(el, text, suffix){
+    var printed = text + "|" + (suffix || "");
+    if(el._printed === printed) return; // 표시가 같으면 DOM을 건드리지 않는다
+    el._printed = printed;
+    el.textContent = text;
+    if(suffix){ var sp = document.createElement('span'); sp.className = 'suffix'; sp.textContent = suffix; el.appendChild(sp); }
+  }
+
+  // value가 null이면 별도 협의. animate는 버튼·스위치 같은 단발 변경에만 켠다 (슬라이더를 끄는 동안은 바로 표시).
+  var COUNT_MS = 300;
+  function setStat(el, value, unit, animate){
     if(el._raf) cancelAnimationFrame(el._raf);
-    if(prefersReducedEarly || !m){ el.removeAttribute('data-val'); put(text); return; }
-    var target = parseInt(m[1].replace(/,/g,''), 10), unit = m[2];
-    var from = parseInt((el.getAttribute('data-val') || '0'), 10) || 0;
-    el.setAttribute('data-val', String(target));
-    var t0 = null, dur = 900;
+    if(value === null){ el._shown = null; putStat(el, NEGOTIABLE); return; }
+    function show(v){ el._shown = v; var t = truncateEstimate(v, unit); putStat(el, t.text, t.suffix); }
+    var from = el._shown;
+    if(!animate || prefersReducedEarly || from === null || from === undefined || from === value){ show(value); return; }
+    var t0 = null;
     function step(ts){
       if(t0 === null) t0 = ts;
-      var k = Math.min(1, (ts - t0) / dur);
+      var k = Math.min(1, (ts - t0) / COUNT_MS);
       var e = 1 - Math.pow(1 - k, 3);
-      put(fmt(Math.round(from + (target - from) * e)) + unit);
+      show(k < 1 ? from + (value - from) * e : value);
       if(k < 1) el._raf = requestAnimationFrame(step);
     }
     el._raf = requestAnimationFrame(step);
   }
 
-  function render(){
+  function render(animate){
     var r = compute();
-    if(r.negotiable){
-      setStatSoft(document.getElementById("out-reach"), NEGOTIABLE);
-      setStatSoft(document.getElementById("out-engagement"), NEGOTIABLE);
-    } else {
-      setStatSoft(document.getElementById("out-reach"), fmt(r.reachLow) + "명", " 이상");
-      setStatSoft(document.getElementById("out-engagement"), fmt(r.engLow) + "회", " 이상");
-    }
+    setStat(document.getElementById("out-reach"), r.negotiable ? null : r.reachLow, "명", animate);
+    setStat(document.getElementById("out-engagement"), r.negotiable ? null : r.engLow, "회", animate);
     var neg = document.getElementById("out-negotiate");
     neg.hidden = !r.negotiable;
     neg.textContent = TIER[state.tier].mult === null
@@ -864,7 +875,7 @@
       { value:"food", label:"식품" }
     ],
     value: state.category,
-    onChange: function(v){ state.category = v; render(); }
+    onChange: function(v){ state.category = v; render(true); }
   });
   document.getElementById("seg-category").appendChild(segCategory.el);
 
@@ -872,7 +883,7 @@
     ariaLabel: "인플루언서 등급 선택",
     options: Object.keys(TIER).map(function(k){ return { value:k, label:TIER[k].label, sub:TIER[k].sub }; }),
     value: state.tier,
-    onChange: function(v){ state.tier = v; render(); }
+    onChange: function(v){ state.tier = v; render(true); }
   });
   document.getElementById("seg-tier").appendChild(segTier.el);
 
@@ -905,10 +916,10 @@
   var qtyTicks = Array.prototype.slice.call(document.querySelectorAll(".qty-tick"));
   qtyTicks.forEach(function(b){
     b.setAttribute("aria-label", "시딩 수량 " + qtyLabel(+b.getAttribute("data-qty")));
-    b.addEventListener("click", function(){ setQty(+b.getAttribute("data-qty")); });
+    b.addEventListener("click", function(){ setQty(+b.getAttribute("data-qty"), true); });
   });
 
-  function setQty(qty){
+  function setQty(qty, animate){
     var changed = qty !== state.qty;
     state.qty = qty;
     var pos = qtyToPos(qty);
@@ -917,16 +928,17 @@
     qtyRange.setAttribute("aria-valuetext", qtyLabel(qty));
     document.getElementById("qty-value").textContent = qtyLabel(qty);
     qtyTicks.forEach(function(b){ var on = +b.getAttribute("data-qty") === qty; b.classList.toggle("is-on", on); b.setAttribute("aria-pressed", on ? "true" : "false"); });
-    if(changed) render();
+    if(changed) render(animate);
   }
 
-  qtyRange.addEventListener("input", function(){ setQty(posToQty(parseFloat(qtyRange.value))); });
+  // 끄는 동안(input)은 애니메이션 없이 바로 표시합니다. 놓을 때는 값이 이미 맞아 있어 change 처리가 필요 없습니다.
+  qtyRange.addEventListener("input", function(){ setQty(posToQty(parseFloat(qtyRange.value)), false); });
   qtyRange.addEventListener("keydown", function(e){
     var dir = (e.key === "ArrowRight" || e.key === "ArrowUp") ? 1 : (e.key === "ArrowLeft" || e.key === "ArrowDown") ? -1 : 0;
     if(!dir) return;
     e.preventDefault();
     var next = QTY_STOPS[QTY_STOPS.indexOf(state.qty) + dir];
-    if(next !== undefined) setQty(next);
+    if(next !== undefined) setQty(next, !e.repeat);
   });
   setQty(state.qty);
 
@@ -938,7 +950,7 @@
       { value:"conversion", label:"매출 전환" }
     ],
     value: state.goal,
-    onChange: function(v){ state.goal = v; render(); }
+    onChange: function(v){ state.goal = v; render(true); }
   });
   document.getElementById("seg-goal").appendChild(segGoal.el);
 
@@ -1018,11 +1030,11 @@
 (function(){
   var bar=document.getElementById("sticky-cta"), panel=document.getElementById("metrics-grid");
   var pairs=[["out-reach","sticky-reach"],["out-engagement","sticky-eng"]];
-  function compact(t){ // "187,131명 이상" -> "18.7만명+"
-    var m=t.replace(/\s+/g," ").match(/^([\d,]+)\s*(명|회)/);
-    if(!m) return t.trim()||"-";
+  function compact(t){ // "187,000명 이상" -> "18.7만명+", 내림만 하므로 원래 값보다 커지지 않는다
+    var m=t.replace(/\s+/g," ").match(/^([\d,]+)\s*(명|회) 이상/);
+    if(!m) return t.trim()||"-"; // "100명 미만", "별도 협의"는 그대로
     var n=+m[1].replace(/,/g,""), u=m[2];
-    var v=n>=10000? (n>=1000000? Math.round(n/10000): Math.round(n/1000)/10)+"만": n.toLocaleString("ko-KR");
+    var v=n>=10000? (n>=1000000? Math.floor(n/10000): Math.floor(n/1000)/10)+"만": n.toLocaleString("ko-KR");
     return v+u+"+";
   }
   function sync(){ pairs.forEach(function(p){ var s=document.getElementById(p[0]), d=document.getElementById(p[1]); if(s&&d) d.textContent=compact(s.textContent); }); }
