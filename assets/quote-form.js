@@ -232,7 +232,11 @@
     }).then(function(res){
       if(res.ok){
         showSuccess("견적 문의가 접수되었습니다", "담당자가 확인 후 영업일 기준 1~2일 내 회신드립니다.");
-        return;
+        // 전환 집계용(assets/analytics.js). 프록시의 2xx 응답과, 서버가 같은 응답을 주는 허니팟 요청은 제외합니다.
+        // 본문을 읽지 못해도 집계만 건너뛰고 위의 성공 화면은 그대로 둡니다.
+        return res.json().then(function(body){
+          if(body && body.ok === true && !payload.website.trim()) form.dispatchEvent(new CustomEvent("enclu:quote-submitted", { bubbles:true }));
+        }).catch(function(){});
       }
       enableSubmit();
       if(res.status >= 500){ showMailFallback(payload); return; }

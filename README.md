@@ -6,7 +6,27 @@
 - 배포: Windows Server + IIS(정적 파일 서빙, `/api/*`는 URL Rewrite + ARR 프록시) + PM2(Node API). 서버에서 `deploy.bat`으로 동기화한다. 처음 배포 순서는 [`docs/windows-deploy.md`](docs/windows-deploy.md), API 상세는 아래 "견적 문의 메일 API" 참고.
 - 디자인 작업 원본·스크린샷·핸드오프: `~/Desktop/hermes/seeding-redesign/` (로컬 전용).
 - SEO/AEO/GEO: 두 페이지 `<head>`의 canonical·OG·JSON-LD, `index.html#faq` 섹션, 루트의 `sitemap.xml`·`robots.txt`·`llms.txt`·`llms-full.txt`·`.nojekyll` (절대 URL은 모두 `https://influencer.enclu.com/` 사용 — 루트, 서브패스 없음).
-- 분석: Google Tag Manager 컨테이너 `GTM-K3RPL358`을 `assets/analytics.js`가 `influencer.enclu.com`에서만 로드한다. GA4 측정 ID 등 개별 태그는 GTM 관리 화면에서 설정한다.
+- 분석: Google Tag Manager 컨테이너 `GTM-K3RPL358`을 `assets/analytics.js`가 `influencer.enclu.com`에서만 로드한다. GA4 측정 ID 등 개별 태그는 GTM 관리 화면에서 설정한다. 전환 이벤트는 아래 "분석 이벤트" 참고.
+
+## 분석 이벤트
+
+`assets/analytics.js`가 문서 전체의 클릭과 폼 접수 성공을 감지해 `dataLayer`로 보낸다. 페이지별 인라인 코드는 없고, 입력값(업체명, 연락처, 이메일, 문의 내용)은 보내지 않는다.
+
+| 이벤트 | 시점 | 파라미터 |
+|---|---|---|
+| `cta_click` | 카카오톡, 전화, 메일, 견적 문의 버튼과 `#handoff` 링크 클릭 | `cta_type`(`kakao`/`phone`/`email`/`consult`), `cta_location`(가장 가까운 섹션 id 또는 `header`/`footer`/`modal`/`sticky`/`unknown`), `page`(`index`/`tool`) |
+| `generate_lead` | `/api/quote`가 2xx와 본문 `{"ok":true}`로 응답한 뒤 (검증 오류, 429, 5xx, 메일 앱 대체 경로, 허니팟은 제외) | `form_id`, `page` |
+
+`tel:`, `mailto:`, 카카오 링크는 `href`로 자동 감지한다. 그 밖의 요소는 `data-cta="consult"`를 붙이고, 모달을 여는 `data-open-quote`/`data-open-consult` 요소는 `data-cta`가 없어도 `consult`로 집계한다.
+
+GTM/GA4 설정:
+
+1. GTM에 데이터 영역 변수 `cta_type`, `cta_location`, `form_id`를 만든다.
+2. 맞춤 이벤트 트리거 `cta_click`, `generate_lead`를 만든다.
+3. 트리거별로 같은 이름의 GA4 이벤트 태그를 만든다. `cta_click`에는 `cta_type`, `cta_location`을, `generate_lead`에는 `form_id`를 파라미터로 넘긴다.
+4. GA4 관리에서 `generate_lead`를 주요 이벤트로 표시한다 (`cta_click`은 선택).
+5. GA4 맞춤 정의에서 `cta_type`, `cta_location`을 이벤트 범위 맞춤 측정기준으로 등록한다.
+6. GTM은 운영 도메인에서만 로드되므로 GTM 미리보기로 `influencer.enclu.com`에서 확인한 뒤 게시한다.
 
 ## 견적 문의 메일 API
 

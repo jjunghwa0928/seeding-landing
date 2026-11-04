@@ -14,9 +14,8 @@
 - **도메인**: `influencer.enclu.com`으로 운영합니다.
   이 도메인은 지금 Cloudflare를 거쳐 다른 Next.js 사이트가 응답하고 있습니다.
   9단계의 DNS 전환 전까지는 운영에 영향이 없습니다.
-- **절대 URL**: 지금 main의 canonical, OG, sitemap 주소는 `jjunghwa0928.github.io/seeding-landing/`을 가리킵니다.
-  도메인 전환 PR #5를 같이 머지해야 검색엔진이 새 주소를 정식 주소로 인식합니다(8단계).
-  화면, 이미지, 폼은 상대 경로라서 PR #5 없이도 동작합니다.
+- **절대 URL**: canonical, OG, sitemap 주소는 이미 `https://influencer.enclu.com/`을 가리킵니다.
+  도메인 전환 PR #5가 이 코드에 포함되어 있어서 따로 머지할 필요가 없습니다.
 - **https**: 사이트가 https라서 폼이 보내는 `/api/quote`도 https로 열려 있어야 합니다.
   같은 도메인 안의 경로라서 사이트가 https면 API도 자동으로 https입니다.
 
@@ -150,8 +149,9 @@ curl -X POST -H "Host: influencer.enclu.com" -H "Content-Type: application/json"
 
 ## 8. 도메인 주소 맞추기 (PR #5)
 
-PR #5는 canonical, OG, sitemap, robots, llms의 절대 주소를 `https://influencer.enclu.com/`으로 바꾸고 GA4 연결을 넣습니다.
-지금은 PR #7과 충돌하는 상태라서, 충돌을 풀고 이 배포와 같은 날 머지합니다.
+PR #5는 canonical, OG, sitemap, robots, llms의 절대 주소를 `https://influencer.enclu.com/`으로 바꾸고 분석 연결을 넣습니다.
+PR #7과의 충돌은 해결되었고, PR #5 내용은 `feat/ga4-cta-events` 브랜치에 포함되어 있습니다.
+이 브랜치를 도메인 전환(9단계)과 같은 날 머지합니다.
 머지한 뒤 서버에서 `deploy.bat`을 한 번 더 실행합니다.
 
 ## 9. DNS 전환
