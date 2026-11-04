@@ -8,6 +8,8 @@ Usage: python3 scripts/bake_reels.py [--src assets/reels/src] [--links links.txt
 Output: assets/reels/<sha1(SCALE + content)[:12]>.mp4 + .webp, and the region between
 <!-- reels:strip --> and <!-- /reels:strip --> in index.html rewritten.
 Without --links every card is a plain, non-clickable video.
+Sources are ordered by leading number in the file name (1_a, 2_b, ..., 10_c); names
+without one follow, sorted by name.
 Re-runs skip outputs already present. 0 videos empties the region and hides
 <section id="reels">; --placeholders N renders N empty boxes instead.
 A missing --src directory is an error, not 0 videos: src is gitignored, so a fresh
@@ -57,6 +59,12 @@ def ffprobe_exe():
     for exe in on_path("ffprobe"):
         return exe
     sys.exit("ffprobe not found on PATH (it ships with ffmpeg)")
+
+
+def source_order(name):
+    # Numeric prefix first so 10_x follows 9_x; names without one go last, by name.
+    m = re.match(r"\d+", name)
+    return (0, int(m.group()), name) if m else (1, 0, name)
 
 
 def content_key(path):
@@ -157,8 +165,8 @@ def main():
         sys.exit(f"source directory not found: {a.src} (create it and add videos; nothing was changed)")
     os.makedirs(a.out, exist_ok=True)
 
-    names = sorted(n for n in os.listdir(a.src)
-                   if n.lower().endswith(EXTS) and not n.startswith("."))
+    names = sorted((n for n in os.listdir(a.src)
+                    if n.lower().endswith(EXTS) and not n.startswith(".")), key=source_order)
     links = read_links(a.links, len(names)) if a.links else [""] * len(names)
     web_dir = os.path.relpath(a.out, os.path.dirname(a.html) or ".").replace(os.sep, "/")
 
