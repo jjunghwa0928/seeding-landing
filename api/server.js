@@ -43,9 +43,12 @@ const CONTEXT_LABELS = { category: '카테고리', tier: '인플루언서 등급
 const SOURCE_LABELS = { index: '랜딩 페이지', tool: '예상 실적 확인', voucher: '수출바우처 문의' };
 // 수출바우처 문구는 여기서만 고친다. assets/quote-form.js, tool.html 의 VOUCHERS 와 같아야 한다 (test/quote.test.js 가 확인).
 const VOUCHERS = [
-  {"key":"kita","label":"한국무역협회 수출바우처","short":"한국무역협회"},
-  {"key":"kosme","label":"중소벤처기업진흥공단 수출바우처","short":"중소벤처기업진흥공단"}
+  {"key":"kosme","label":"중기부(중진공) 수출바우처","short":"중기부(중진공)"},
+  {"key":"kotra","label":"산업부(KOTRA) 수출바우처","short":"산업부(KOTRA)"}
 ];
+// 광고성 정보 수신 동의 문구의 버전. assets/quote-form.js 와 같아야 한다 (test/quote.test.js 가 확인).
+const MARKETING_TEXT_VERSION = 'marketing-2026-11-04';
+const KST_OFFSET_MS = 9 * 60 * 60 * 1000;
 
 const DUPLICATE_WINDOW_MS = 10 * 60 * 1000;
 
@@ -158,16 +161,39 @@ function sanitizeContext(v) {
 /** 수출바우처 보유: 없으면 [], 허용 키만 중복 없이 받는다. 형식이 틀리면 null */
 function parseVouchers(v) {
   if (v === undefined) return [];
-  if (!Array.isArray(v) || new Set(v).size !== v.length) return null;
+  if (!Array.isArray(v)) return null;
+  // 'kita'는 PR #14 때의 잘못된 키(한국무역협회) — 캐시된 옛 폼이 보내도 거절하지 않고 kotra로 읽는다
+  v = v.map((key) => (key === 'kita' ? 'kotra' : key));
+  if (new Set(v).size !== v.length) return null;
   const keys = VOUCHERS.map((item) => item.key);
   if (!v.every((key) => keys.includes(key))) return null;
   return keys.filter((key) => v.includes(key)); // 순서가 달라도 중복 판정이 같도록 정렬
 }
 
-/** 메일 표기: "한국무역협회 보유, 중소벤처기업진흥공단 미보유" / 전부 없으면 "미보유" */
+/** 메일 표기: "중기부(중진공) 보유, 산업부(KOTRA) 미보유" / 전부 없으면 "미보유" */
 function formatVouchers(keys) {
   if (!keys.length) return '미보유';
   return VOUCHERS.map((item) => `${item.short} ${keys.includes(item.key) ? '보유' : '미보유'}`).join(', ');
+}
+
+/**
+ * 광고성 정보 수신 동의: 없으면 미동의, 형식이 틀리면 null.
+ * agreedAt 은 클라이언트 시계를 믿지 않고 서버 수신 시각으로 정한다. 미동의면 다른 값은 보지 않는다.
+ */
+function parseMarketingConsent(v) {
+  const notAgreed = { agreed: false, agreedAt: null, textVersion: null };
+  if (v === undefined) return notAgreed;
+  if (!v || typeof v !== 'object' || Array.isArray(v) || typeof v.agreed !== 'boolean') return null;
+  if (!v.agreed) return notAgreed;
+  if (v.textVersion !== MARKETING_TEXT_VERSION) return null;
+  return { agreed: true, agreedAt: new Date().toISOString(), textVersion: MARKETING_TEXT_VERSION };
+}
+
+/** 메일 표기: "동의 (2026-11-04 18:02, 문구 marketing-2026-11-04)" (한국 시각) / "미동의" */
+function formatMarketingConsent(consent) {
+  if (!consent.agreed) return '미동의';
+  const kst = new Date(Date.parse(consent.agreedAt) + KST_OFFSET_MS).toISOString().slice(0, 16).replace('T', ' ');
+  return `동의 (${kst}, 문구 ${consent.textVersion})`;
 }
 
 /**
@@ -182,6 +208,7 @@ function validateQuote(body) {
     email: singleLine(body.email),
     quantity: singleLine(body.quantity),
     vouchers: parseVouchers(body.vouchers),
+    marketingConsent: parseMarketingConsent(body.marketingConsent),
     message: typeof body.message === 'string' ? body.message.replace(/\r\n?/g, '\n').trim() : '',
     context: sanitizeContext(body.context),
     source: typeof body.source === 'string' && Object.prototype.hasOwnProperty.call(SOURCE_LABELS, body.source) ? body.source : 'unknown'
@@ -209,6 +236,7 @@ function validateQuote(body) {
   if (!data.vouchers) fields.vouchers = '수출바우처 보유 여부를 다시 선택해 주세요.';
   if (data.message.length > LIMITS.message) fields.message = `${LIMITS.message}자 이내로 입력해 주세요.`;
   if (body.consent !== true) fields.consent = '개인정보 수집·이용에 동의해 주세요.';
+  if (!data.marketingConsent) fields.marketingConsent = '광고성 정보 수신 동의를 다시 선택해 주세요.';
 
   return Object.keys(fields).length ? { ok: false, fields } : { ok: true, data };
 }
@@ -231,6 +259,7 @@ function buildMail(config, data, meta) {
     ['희망 진행 수량', data.quantity],
     ['수출바우처 보유', formatVouchers(data.vouchers)],
     ['개인정보 수집·이용 동의', '동의함'],
+    ['광고성 정보 수신 동의', formatMarketingConsent(data.marketingConsent)],
     ['문의 경로', SOURCE_LABELS[data.source] || '-']
   ];
   if (data.context) {
@@ -480,4 +509,4 @@ function start() {
 
 if (require.main === module) start();
 
-module.exports = { createApp, loadConfig, startupError, validateQuote, buildMail, clientIp, createDuplicateGuard, LIMITS, QUANTITY_OPTIONS, VOUCHERS };
+module.exports = { createApp, loadConfig, startupError, validateQuote, buildMail, clientIp, createDuplicateGuard, LIMITS, QUANTITY_OPTIONS, VOUCHERS, MARKETING_TEXT_VERSION };

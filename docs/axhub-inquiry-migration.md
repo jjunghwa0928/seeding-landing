@@ -54,10 +54,11 @@
 | `phone` | `phone` | 같음 |
 | `email` | `email` | 같음 |
 | `quantity` (선택 5종) | 없음 | `message` 앞에 붙이거나 허브에 사이트별 추가 필드가 필요 → **허브 쪽 확인 필요** |
-| `vouchers` (키 배열 `kita`/`kosme`, 2026-11-04 추가) | `voucher` (문자열, 최대 100자) | 허브에 이미 있는 텍스트 칸. 한글 문자열로 합쳐 보낸다. 예: `한국무역협회 보유, 중소벤처기업진흥공단 미보유`, 빈 배열은 `미보유` (메일 표기와 같음). 허브 변경 불필요 |
+| `vouchers` (키 배열 `kosme`/`kotra`, 2026-11-04 추가) | `voucher` (문자열, 최대 100자) | 허브에 이미 있는 텍스트 칸. 한글 문자열로 합쳐 보낸다. 예: `중기부(중진공) 보유, 산업부(KOTRA) 미보유`, 빈 배열은 `미보유` (메일 표기와 같음). 허브 변경 불필요 |
 | `message` | `message` | 같음 |
 | `context` (계산기 조건 5개: `category`, `tier`, `quantity`, `goal`, `voucher`) | 없음 | `quantity`와 같은 문제 |
-| `consent` (불리언) | `consent.privacyAgreed` + `privacyVersion` | 동의 문구 버전 값이 필요하다 (IQ-D11). 마케팅 동의 칸은 지금 없다 |
+| `consent` (불리언) | `consent.privacyAgreed` + `privacyVersion` | `privacyVersion` 값은 아직 미정이다 (IQ-D11). 개인정보 동의 문구에는 버전 상수가 아직 없다 |
+| `marketingConsent` (`agreed`, `agreedAt`, `textVersion`, 2026-11-04 추가) | `marketingConsent` | 1:1 (axhub `sales-lead/2` PayloadMarketing). `textVersion`은 `marketing-2026-11-04`. 폼은 미동의일 때 `agreed: false`와 나머지 `null`을 보낸다. 지금 `api/server.js`는 `agreedAt`을 클라이언트 값 대신 서버 수신 시각으로 정한다 |
 | — | `utm.*` | 페이지 URL의 `utm_*`를 읽어 채운다 |
 | — | `pageUrl` | `location.href` |
 | `website` (허니팟) | 없음 | 설계안에도 허니팟이 있다(IQ-D3). 필드 이름은 허브와 맞춘다. 허브가 "알 수 없는 필드 거부"이므로 이름이 다르면 400이 난다 |

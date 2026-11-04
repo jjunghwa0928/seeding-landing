@@ -11,7 +11,7 @@ const http = require('node:http');
 const fs = require('node:fs');
 const path = require('node:path');
 const { spawnSync } = require('node:child_process');
-const { createApp, loadConfig, startupError, QUANTITY_OPTIONS, VOUCHERS } = require('../server');
+const { createApp, loadConfig, startupError, validateQuote, buildMail, QUANTITY_OPTIONS, VOUCHERS, MARKETING_TEXT_VERSION } = require('../server');
 
 // 테스트 중 서버 로그는 숨긴다
 const origLog = console.log;
@@ -235,9 +235,9 @@ describe('quote api', () => {
   test('vouchers: valid values are accepted and shown in the mail', async () => {
     const cases = [
       [[], '미보유'],
-      [['kita'], '한국무역협회 보유, 중소벤처기업진흥공단 미보유'],
-      [['kosme'], '한국무역협회 미보유, 중소벤처기업진흥공단 보유'],
-      [['kita', 'kosme'], '한국무역협회 보유, 중소벤처기업진흥공단 보유']
+      [['kosme'], '중기부(중진공) 보유, 산업부(KOTRA) 미보유'],
+      [['kotra'], '중기부(중진공) 미보유, 산업부(KOTRA) 보유'],
+      [['kosme', 'kotra'], '중기부(중진공) 보유, 산업부(KOTRA) 보유']
     ];
     for (const [i, [vouchers, shown]] of cases.entries()) {
       const res = await request(server, 'POST', '/api/quote', validPayload({ vouchers }));
@@ -253,8 +253,16 @@ describe('quote api', () => {
     assert.ok(sent[0].text.includes('수출바우처 보유: 미보유\n'));
   });
 
+  test('vouchers: legacy key kita (cached old form) is read as kotra', async () => {
+    const res = await request(server, 'POST', '/api/quote', validPayload({ vouchers: ['kita'] }));
+    assert.equal(res.status, 200);
+    assert.ok(sent[0].text.includes('수출바우처 보유: 중기부(중진공) 미보유, 산업부(KOTRA) 보유\n'));
+    const dup = await request(server, 'POST', '/api/quote', validPayload({ vouchers: ['kita', 'kotra'] }));
+    assert.equal(dup.status, 400);
+  });
+
   test('vouchers: unknown or duplicate keys → 400 with its message, nothing sent', async () => {
-    for (const vouchers of [['nope'], ['kita', 'nope'], ['constructor'], ['kita', 'kita'], [['kita']]]) {
+    for (const vouchers of [['nope'], ['kotra', 'nope'], ['constructor'], ['kotra', 'kotra'], [['kotra']]]) {
       const res = await request(server, 'POST', '/api/quote', validPayload({ vouchers }));
       assert.equal(res.status, 400, JSON.stringify(vouchers));
       assert.equal(res.json.error, 'invalid_input');
@@ -264,7 +272,7 @@ describe('quote api', () => {
   });
 
   test('vouchers: non-array → 400, nothing sent', async () => {
-    for (const vouchers of ['kita', { 0: 'kita', length: 1 }, null, true, 1]) {
+    for (const vouchers of ['kotra', { 0: 'kotra', length: 1 }, null, true, 1]) {
       const res = await request(server, 'POST', '/api/quote', validPayload({ vouchers }));
       assert.equal(res.status, 400, JSON.stringify(vouchers));
       assert.deepEqual(res.json.fields, { vouchers: '수출바우처 보유 여부를 다시 선택해 주세요.' });
@@ -274,8 +282,8 @@ describe('quote api', () => {
 
   test('vouchers: the labels in the form, the calculator and the API match', () => {
     assert.deepEqual(VOUCHERS.map((v) => [v.key, v.label]), [
-      ['kita', '한국무역협회 수출바우처'],
-      ['kosme', '중소벤처기업진흥공단 수출바우처']
+      ['kosme', '중기부(중진공) 수출바우처'],
+      ['kotra', '산업부(KOTRA) 수출바우처']
     ]);
     for (const file of [['assets', 'quote-form.js'], ['tool.html']]) {
       const src = fs.readFileSync(path.join(__dirname, '..', '..', ...file), 'utf8');
@@ -283,6 +291,94 @@ describe('quote api', () => {
       assert.ok(match, `VOUCHERS not found in ${file.join('/')}`);
       assert.deepEqual(JSON.parse(match[1]), VOUCHERS, file.join('/'));
     }
+  });
+
+  const MARKETING_ERROR = { marketingConsent: '광고성 정보 수신 동의를 다시 선택해 주세요.' };
+
+  test('marketingConsent: old clients that do not send the field are not agreed', async () => {
+    const res = await request(server, 'POST', '/api/quote', validPayload());
+    assert.equal(res.status, 200);
+    assert.ok(sent[0].text.includes('광고성 정보 수신 동의: 미동의\n'));
+  });
+
+  test('marketingConsent: agreed false → 미동의, other fields are ignored', async () => {
+    const res = await request(server, 'POST', '/api/quote', validPayload({
+      marketingConsent: { agreed: false, agreedAt: 'nope', textVersion: 'old' }
+    }));
+    assert.equal(res.status, 200);
+    assert.ok(sent[0].text.includes('광고성 정보 수신 동의: 미동의\n'));
+    assert.ok(!sent[0].text.includes('old'));
+  });
+
+  test('marketingConsent: agreed true → server time and text version, client clock ignored', async () => {
+    const res = await request(server, 'POST', '/api/quote', validPayload({
+      marketingConsent: { agreed: true, agreedAt: '1999-01-01T00:00:00.000Z', textVersion: MARKETING_TEXT_VERSION }
+    }));
+    assert.equal(res.status, 200);
+    const row = new RegExp(`광고성 정보 수신 동의: 동의 \\(\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}, 문구 ${MARKETING_TEXT_VERSION}\\)\\n`);
+    assert.match(sent[0].text, row);
+    assert.ok(!sent[0].text.includes('1999-01-01'));
+  });
+
+  test('marketingConsent: agreed true without agreedAt is still accepted', () => {
+    const v = validateQuote(validPayload({ marketingConsent: { agreed: true, textVersion: MARKETING_TEXT_VERSION } }));
+    assert.equal(v.ok, true);
+    assert.equal(v.data.marketingConsent.agreed, true);
+    assert.equal(v.data.marketingConsent.textVersion, MARKETING_TEXT_VERSION);
+    assert.ok(Math.abs(Date.parse(v.data.marketingConsent.agreedAt) - Date.now()) < 5000);
+  });
+
+  test('marketingConsent: the mail shows the agreed time in Korea time', () => {
+    const v = validateQuote(validPayload());
+    const data = { ...v.data, marketingConsent: { agreed: true, agreedAt: '2026-11-04T09:02:00.000Z', textVersion: 'marketing-2026-11-04' } };
+    const { text, html } = buildMail(baseConfig(), data, { receivedAt: '2026-11-04T09:02:00.000Z' });
+    const shown = '동의 (2026-11-04 18:02, 문구 marketing-2026-11-04)';
+    assert.ok(text.includes(`광고성 정보 수신 동의: ${shown}\n`));
+    assert.ok(html.includes(`<td style="padding:4px 0">${shown}</td>`));
+  });
+
+  test('marketingConsent: wrong or missing textVersion → 400, nothing sent', async () => {
+    for (const textVersion of ['marketing-1999-01-01', '', null, 1, undefined]) {
+      const res = await request(server, 'POST', '/api/quote', validPayload({ marketingConsent: { agreed: true, textVersion } }));
+      assert.equal(res.status, 400, String(textVersion));
+      assert.equal(res.json.error, 'invalid_input');
+      assert.deepEqual(res.json.fields, MARKETING_ERROR);
+    }
+    assert.equal(sent.length, 0);
+  });
+
+  test('marketingConsent: non-boolean agreed → 400, nothing sent', async () => {
+    for (const agreed of ['true', 1, null, undefined]) {
+      const res = await request(server, 'POST', '/api/quote', validPayload({ marketingConsent: { agreed, textVersion: MARKETING_TEXT_VERSION } }));
+      assert.equal(res.status, 400, String(agreed));
+      assert.deepEqual(res.json.fields, MARKETING_ERROR);
+    }
+    assert.equal(sent.length, 0);
+  });
+
+  test('marketingConsent: non-object → 400, nothing sent', async () => {
+    for (const marketingConsent of ['yes', true, 1, null, [{ agreed: true }]]) {
+      const res = await request(server, 'POST', '/api/quote', validPayload({ marketingConsent }));
+      assert.equal(res.status, 400, JSON.stringify(marketingConsent));
+      assert.deepEqual(res.json.fields, MARKETING_ERROR);
+    }
+    assert.equal(sent.length, 0);
+  });
+
+  test('marketingConsent: the text version in the form and the API match', () => {
+    const js = fs.readFileSync(path.join(__dirname, '..', '..', 'assets', 'quote-form.js'), 'utf8');
+    const match = js.match(/var MARKETING_TEXT_VERSION = "([^"]*)";/);
+    assert.ok(match, 'MARKETING_TEXT_VERSION not found in assets/quote-form.js');
+    assert.equal(match[1], MARKETING_TEXT_VERSION);
+  });
+
+  test('duplicate guard: marketingConsent does not count', async () => {
+    let res = await request(server, 'POST', '/api/quote', validPayload());
+    assert.equal(res.status, 200);
+    res = await request(server, 'POST', '/api/quote', validPayload({ marketingConsent: { agreed: true, textVersion: MARKETING_TEXT_VERSION } }));
+    assert.equal(res.status, 429);
+    assert.equal(res.json.error, 'duplicate');
+    assert.equal(sent.length, 1);
   });
 
   test('over-length fields → 400', async () => {
@@ -348,13 +444,13 @@ describe('quote api', () => {
   test('context: tier and quantity from the v6 calculator reach the mail', async () => {
     const res = await request(server, 'POST', '/api/quote', validPayload({
       source: 'tool',
-      context: { category: '스킨케어', tier: '마이크로', quantity: '50건', goal: '인지도 확대', voucher: '한국무역협회, 중소벤처기업진흥공단' }
+      context: { category: '스킨케어', tier: '마이크로', quantity: '50건', goal: '인지도 확대', voucher: '중기부(중진공), 산업부(KOTRA)' }
     }));
     assert.equal(res.status, 200);
     const { text } = sent[0];
     assert.ok(text.includes('계산기 인플루언서 등급: 마이크로'));
     assert.ok(text.includes('계산기 시딩 수량: 50건'));
-    assert.ok(text.includes('계산기 수출바우처: 한국무역협회, 중소벤처기업진흥공단'));
+    assert.ok(text.includes('계산기 수출바우처: 중기부(중진공), 산업부(KOTRA)'));
   });
 
   test('non-object context and unknown source are ignored, not fatal', async () => {
@@ -405,12 +501,12 @@ describe('quote api', () => {
   });
 
   test('duplicate guard: vouchers count, but their order does not', async () => {
-    let res = await request(server, 'POST', '/api/quote', validPayload({ vouchers: ['kita', 'kosme'] }));
+    let res = await request(server, 'POST', '/api/quote', validPayload({ vouchers: ['kosme', 'kotra'] }));
     assert.equal(res.status, 200);
-    res = await request(server, 'POST', '/api/quote', validPayload({ vouchers: ['kosme', 'kita'] }));
+    res = await request(server, 'POST', '/api/quote', validPayload({ vouchers: ['kotra', 'kosme'] }));
     assert.equal(res.status, 429, 'same set in another order');
     assert.equal(res.json.error, 'duplicate');
-    res = await request(server, 'POST', '/api/quote', validPayload({ vouchers: ['kita'] }));
+    res = await request(server, 'POST', '/api/quote', validPayload({ vouchers: ['kotra'] }));
     assert.equal(res.status, 200, 'different holdings');
     res = await request(server, 'POST', '/api/quote', validPayload());
     assert.equal(res.status, 200, 'missing field differs from a held voucher');
