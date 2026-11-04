@@ -15,7 +15,7 @@
 | 이벤트 | 시점 | 파라미터 |
 |---|---|---|
 | `cta_click` | 카카오톡, 전화, 메일, 견적 문의 버튼과 `#handoff` 링크 클릭 | `cta_type`(`kakao`/`phone`/`email`/`consult`), `cta_location`(가장 가까운 섹션 id 또는 `header`/`footer`/`modal`/`sticky`/`unknown`), `page`(`index`/`tool`) |
-| `generate_lead` | `/api/quote`가 접수 성공으로 응답한 뒤 (검증 오류, 429, 5xx, 메일 앱 대체 경로, 허니팟은 제외) | `form_id`, `page` |
+| `generate_lead` | `/api/quote`가 2xx와 본문 `{"ok":true}`로 응답한 뒤 (검증 오류, 429, 5xx, 메일 앱 대체 경로, 허니팟은 제외) | `form_id`, `page` |
 
 `tel:`, `mailto:`, 카카오 링크는 `href`로 자동 감지한다. 그 밖의 요소는 `data-cta="consult"`를 붙이고, 모달을 여는 `data-open-quote`/`data-open-consult` 요소는 `data-cta`가 없어도 `consult`로 집계한다.
 
