@@ -231,6 +231,8 @@
       body: JSON.stringify(payload)
     }).then(function(res){
       if(res.ok){
+        // 전환 집계용(assets/analytics.js). 허니팟에 걸린 요청도 서버는 200으로 응답하므로 제외합니다.
+        if(!payload.website.trim()) form.dispatchEvent(new CustomEvent("enclu:quote-submitted", { bubbles:true }));
         showSuccess("견적 문의가 접수되었습니다", "담당자가 확인 후 영업일 기준 1~2일 내 회신드립니다.");
         return;
       }
