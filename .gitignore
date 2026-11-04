@@ -2,3 +2,8 @@ _*
 *.png
 *.log
 __pycache__/
+assets/reels/src/
+assets/IMG/brands/src/
+api/.env
+api/node_modules
+api/logs
