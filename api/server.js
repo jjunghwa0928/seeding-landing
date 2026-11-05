@@ -53,7 +53,7 @@ const VOUCHERS = [
 // 광고성 정보 수신 동의 문구의 버전. assets/quote-form.js 와 같아야 한다 (test/quote.test.js 가 확인).
 const MARKETING_TEXT_VERSION = 'marketing-2026-11-04';
 // 개인정보 수집·이용 안내 문구(assets/quote-form.js 의 CONSENT_HTML)의 버전. 문구를 고치면 함께 올린다.
-const PRIVACY_TEXT_VERSION = 'privacy-2026-11-04';
+const PRIVACY_TEXT_VERSION = 'privacy-2026-11-05';
 const KST_OFFSET_MS = 9 * 60 * 60 * 1000;
 
 const DUPLICATE_WINDOW_MS = 10 * 60 * 1000;
