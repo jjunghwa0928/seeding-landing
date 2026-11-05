@@ -10,8 +10,9 @@
  *   helmet 기본 헤더 → CORS(허용 목록) → 전역 60req/min → /api/quote 5req/10min → JSON 16kb 제한
  *   → 허니팟 → 필드 검증·헤더 제어문자 제거 → Turnstile 검증(TURNSTILE_SECRET 이 있을 때만)
  *   → 중복 전송 가드(10분, 발송 성공 후 기록) → 메일 발송
+ *   → AX Hub 영업 리드 전달(AXHUB_LEAD_KEY 가 있을 때만, 응답을 기다리게 하지 않음)
  *
- * 테스트에서는 createApp({ config, sendMail, verifyTurnstile }) 로
+ * 테스트에서는 createApp({ config, sendMail, verifyTurnstile, forwardLead }) 로
  * 네트워크를 쓰지 않는 가짜 구현을 주입한다.
  */
 
@@ -48,9 +49,17 @@ const VOUCHERS = [
 ];
 // 광고성 정보 수신 동의 문구의 버전. assets/quote-form.js 와 같아야 한다 (test/quote.test.js 가 확인).
 const MARKETING_TEXT_VERSION = 'marketing-2026-11-04';
+// 개인정보 수집·이용 안내 문구(assets/quote-form.js 의 CONSENT_HTML)의 버전. 문구를 고치면 함께 올린다.
+const PRIVACY_TEXT_VERSION = 'privacy-2026-11-04';
 const KST_OFFSET_MS = 9 * 60 * 60 * 1000;
 
 const DUPLICATE_WINDOW_MS = 10 * 60 * 1000;
+
+const AXHUB_LEADS_URL = 'https://axhub.enclu.com/api/sales/leads';
+const AXHUB_TIMEOUT_MS = 5000;
+const AXHUB_RETRY_DELAY_MS = 1000;
+// 수출바우처 버튼(data-quote-source="voucher")은 index.html 에만 있다.
+const LEAD_PAGES = { index: 'index', tool: 'tool', voucher: 'index' };
 
 // ---------------------------------------------------------------------------
 // 설정
@@ -76,6 +85,10 @@ function loadConfig(env = process.env) {
     mailFrom: env.MAIL_FROM || env.SMTP_USER || 'mkt2@enclu.co.kr',
     mailTo: env.MAIL_TO || 'mkt2@enclu.co.kr',
     turnstileSecret: env.TURNSTILE_SECRET || '',
+    axhub: {
+      leadKey: String(env.AXHUB_LEAD_KEY || '').trim(),
+      leadsUrl: String(env.AXHUB_LEADS_URL || '').trim() || AXHUB_LEADS_URL
+    },
     allowedOrigins
   };
 }
@@ -133,6 +146,59 @@ function createSmtpSender(config) {
     socketTimeout: 15000
   });
   return (mail) => transport.sendMail(mail);
+}
+
+/**
+ * AX Hub 영업 리드 전달 (계약 sales-lead/2). 만든 함수는 절대 reject 하지 않으므로 기다리지 않고 호출한다.
+ * 메일이 정식 접수 경로이고 허브는 병행 전달이다. 실패해도 상태 코드나 오류 이름만 남긴다.
+ * 네트워크 오류·시간 초과·5xx 는 같은 Idempotency-Key 로 한 번만 다시 보낸다.
+ */
+function createLeadForwarder(config, { fetchImpl = fetch, timeoutMs = AXHUB_TIMEOUT_MS, retryDelayMs = AXHUB_RETRY_DELAY_MS } = {}) {
+  const { leadKey, leadsUrl } = config.axhub;
+
+  async function post(body, idempotencyKey) {
+    const ctrl = new AbortController();
+    const timer = setTimeout(() => ctrl.abort(), timeoutMs);
+    try {
+      const res = await fetchImpl(leadsUrl, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${leadKey}`,
+          'Idempotency-Key': idempotencyKey,
+          'Content-Type': 'application/json'
+        },
+        body,
+        redirect: 'manual', // 고객 정보와 키를 다른 주소로 따라 보내지 않는다
+        signal: ctrl.signal
+      });
+      if (res.body) res.body.cancel().catch(() => {}); // 응답 본문은 쓰지 않는다. 연결만 돌려준다
+      return { status: res.status };
+    } catch (err) {
+      return { reason: err && err.name ? err.name : 'unknown' };
+    } finally {
+      clearTimeout(timer);
+    }
+  }
+
+  return async function forwardLead(data, submittedAt) {
+    if (!leadKey) return;
+    try {
+      const body = JSON.stringify(buildLead(data, submittedAt));
+      const idempotencyKey = crypto.randomUUID();
+
+      let result = await post(body, idempotencyKey);
+      if (result.reason || result.status >= 500) {
+        log('warn', 'hub lead attempt failed, retrying', result);
+        await new Promise((resolve) => setTimeout(resolve, retryDelayMs));
+        result = await post(body, idempotencyKey);
+      }
+
+      if (result.status === 200 || result.status === 201) log('info', 'hub lead forwarded', result);
+      else log('error', 'hub lead failed', result);
+    } catch (err) {
+      log('error', 'hub lead failed', { reason: err && err.name ? err.name : 'unknown' });
+    }
+  };
 }
 
 // ---------------------------------------------------------------------------
@@ -296,6 +362,51 @@ function buildMail(config, data, meta) {
   };
 }
 
+/** "2026-11-05T18:02:00.000+09:00" (한국 시각) */
+function toKstIso(date) {
+  return new Date(date.getTime() + KST_OFFSET_MS).toISOString().replace('Z', '+09:00');
+}
+
+/**
+ * 허브 context. 값이 있는 키만 보낸다. voucher 는 폼의 보유 여부(메일 표기와 같음)라서 계산기 없는 문의에도 들어간다.
+ * 허브에는 등급·수량 칸이 없으므로 v6 계산기의 tier·quantity 는 people 에 합친다 (이전 버전 tool.html 은 people 을 보낸다).
+ */
+function buildLeadContext(data) {
+  const calc = data.context || {};
+  const people = calc.people || [calc.tier, calc.quantity].filter(Boolean).join(' ').slice(0, LIMITS.contextValue);
+  const context = {};
+  if (calc.category) context.category = calc.category;
+  if (people) context.people = people;
+  if (calc.goal) context.goal = calc.goal;
+  context.voucher = formatVouchers(data.vouchers);
+  return context;
+}
+
+/** 허브 계약 sales-lead/2 본문. 알 수 없는 키는 허브가 400 으로 거부하므로 여기 있는 키만 보낸다. */
+function buildLead(data, submittedAt) {
+  const marketing = data.marketingConsent;
+  return {
+    submittedAt: toKstIso(submittedAt),
+    company: data.company,
+    contactName: data.contactName,
+    phone: data.phone || null,
+    email: data.email,
+    quantity: data.quantity || null,
+    message: data.message || null,
+    page: LEAD_PAGES[data.source] || null,
+    inquiryType: 'quote',
+    utm: null, // 폼이 페이지 주소나 utm 값을 보내지 않는다
+    context: buildLeadContext(data),
+    privacyConsent: true, // validateQuote 가 consent === true 만 통과시킨다
+    privacyTextVersion: PRIVACY_TEXT_VERSION,
+    marketingConsent: {
+      agreed: marketing.agreed,
+      agreedAt: marketing.agreed ? toKstIso(new Date(marketing.agreedAt)) : null,
+      textVersion: marketing.textVersion
+    }
+  };
+}
+
 // ---------------------------------------------------------------------------
 // 중복 전송 가드 (메모리)
 // ---------------------------------------------------------------------------
@@ -397,6 +508,7 @@ function createApp(options = {}) {
   const sendMail = options.sendMail || createSmtpSender(config);
   const verifyTurnstile = options.verifyTurnstile || verifyTurnstileRemote;
   const duplicates = options.duplicateGuard || createDuplicateGuard();
+  const forwardLead = options.forwardLead || createLeadForwarder(config);
 
   const app = express();
   app.disable('x-powered-by');
@@ -449,11 +561,14 @@ function createApp(options = {}) {
     }
 
     // 5) 발송
-    const mail = buildMail(config, data, { receivedAt: new Date().toISOString() });
+    const receivedAt = new Date();
+    const mail = buildMail(config, data, { receivedAt: receivedAt.toISOString() });
     try {
       await sendMail(mail);
       duplicates.remember(data);
       log('info', 'sent', { ip, source: data.source });
+      // 메일이 실패하면 사용자가 다시 보내므로 성공한 건만 넘긴다. 결과를 기다리지 않는다.
+      forwardLead(data, receivedAt);
       return res.json({ ok: true });
     } catch (err) {
       log('error', 'send failed', { ip, reason: err && err.code ? err.code : 'unknown' });
@@ -502,6 +617,7 @@ function start() {
     log('info', `listening on :${config.port}`, {
       env: config.nodeEnv,
       mailTo: config.mailTo,
+      hubLeads: config.axhub.leadKey ? 'on' : 'off',
       cors: config.allowedOrigins.length ? config.allowedOrigins : 'same-origin'
     });
   });
@@ -509,4 +625,4 @@ function start() {
 
 if (require.main === module) start();
 
-module.exports = { createApp, loadConfig, startupError, validateQuote, buildMail, clientIp, createDuplicateGuard, LIMITS, QUANTITY_OPTIONS, VOUCHERS, MARKETING_TEXT_VERSION };
+module.exports = { createApp, createLeadForwarder, loadConfig, startupError, validateQuote, buildMail, buildLead, clientIp, createDuplicateGuard, LIMITS, QUANTITY_OPTIONS, VOUCHERS, MARKETING_TEXT_VERSION, PRIVACY_TEXT_VERSION };

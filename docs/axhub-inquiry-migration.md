@@ -1,8 +1,39 @@
 # 견적 문의 폼 → AX Hub 문의 API 전환 준비
 
-상태: **착수 대기**. AX Hub 문의 API(axhub PR #223, `docs/architecture/inquiry-management.md`)의
-결정 `IQ-D1`~`IQ-D18`이 전부 대기 중이고 API가 아직 없다. 이 문서는 API가 생기면 바로 전환할 수
-있도록 이 저장소 쪽에서 바꿔야 할 것을 미리 정리한 것이다. 확인 시점 2026-11-04, 기준 `origin/main` `6ba5b31`.
+상태: **서버 간 리드 전달 구현(병행 운영), 폼 직접 전환은 착수 대기**.
+
+- 구현됨 (2026-11-05, `feat/axhub-sales-lead`): `api/server.js`가 메일 발송에 성공한 문의를 axhub 영업 리드 API(`sales-lead/2`)로도 보낸다. 0장 참고. 운영 서버에 `AXHUB_LEAD_KEY`를 넣어야 켜진다.
+- 착수 대기: 폼이 허브 공개 API를 직접 호출하는 전환(1~5장). AX Hub 문의 API(axhub PR #223, `docs/architecture/inquiry-management.md`)의
+  결정 `IQ-D1`~`IQ-D18`이 전부 대기 중이고 API가 아직 없다. 아래 장은 API가 생기면 바로 전환할 수
+  있도록 이 저장소 쪽에서 바꿔야 할 것을 미리 정리한 것이다. 확인 시점 2026-11-04, 기준 `origin/main` `6ba5b31`.
+
+## 0. 서버 간 리드 전달 (`sales-lead/2`, 병행 운영)
+
+```
+POST /api/quote → SMTP 메일 (성공/실패를 사용자에게 응답)
+                └ 메일 성공 후 → POST AXHUB_LEADS_URL (응답을 기다리지 않음, 결과는 로그만)
+```
+
+- 설정: `AXHUB_LEAD_KEY`(비밀, 비우면 전달 안 함), `AXHUB_LEADS_URL`(선택, 기본 `https://axhub.enclu.com/api/sales/leads`). 설정 방법은 `docs/windows-deploy.md` 11단계.
+- 시간 제한 5초. 네트워크 오류·시간 초과·5xx는 1초 뒤 같은 `Idempotency-Key`로 1번 다시 보낸다. 400·401·404·429는 다시 보내지 않는다.
+- 전달 큐가 없다. 끝내 실패한 건과 PM2 재시작 때 전달 중이던 건은 허브에 들어가지 않고 메일에만 남는다.
+- `privacyTextVersion`은 `api/server.js`의 `PRIVACY_TEXT_VERSION`(`privacy-2026-11-04`)이다. `assets/quote-form.js`의 `CONSENT_HTML`을 고치면 함께 올린다.
+
+| 허브 필드 | 값 |
+|---|---|
+| `submittedAt` | 서버 수신 시각, KST `+09:00` |
+| `company`, `contactName`, `phone`, `email`, `quantity` | 폼 값 그대로 |
+| `message` | 폼 값, 비어 있으면 `null` |
+| `page` | `source`가 `index`·`voucher`면 `index`, `tool`이면 `tool`, 그 밖에는 `null`. 수출바우처 버튼에서 왔다는 정보는 남지 않는다 (미리 채운 `message`로만 알 수 있다) |
+| `inquiryType` | `quote` 고정 |
+| `utm` | 항상 `null`. 폼이 페이지 주소나 UTM을 보내지 않는다 |
+| `context.category`, `context.goal` | 계산기 값. 없으면 키를 뺀다 |
+| `context.people` | 이전 `tool.html`의 `people`, 없으면 v6 계산기의 `tier`와 `quantity`를 합친 값(예: `마이크로 50건`). 없으면 키를 뺀다 |
+| `context.voucher` | 폼의 `vouchers`를 메일과 같게 표기한 값. 항상 넣는다 (예: `미보유`). 그래서 `context`는 `null`이 되지 않는다 |
+| `privacyConsent`, `privacyTextVersion` | `true`, `privacy-2026-11-04` |
+| `marketingConsent` | `agreed`, `agreedAt`(서버 수신 시각, KST `+09:00`), `textVersion`. 미동의면 나머지는 `null` |
+
+첫 실제 전달에서 확인할 것: 계약이 `context`의 일부 키만 보내는 형태를 받는지. 거부되면 `hub lead failed {"status":400}`이 남는다.
 
 ## 1. 현재 구조 (전환 대상)
 
