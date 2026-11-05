@@ -239,7 +239,8 @@
   /* 두 칸 고정: 칸 너비에 맞춘 글자 크기로 가장 긴 값("3,987,000명 이상")도 한 줄에 들어가고, 값이 바뀌어도 높이가 그대로입니다 */
   .live-metrics{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:20px;}
   .live-metrics > div{min-width:0;container-type:inline-size;}
-  .results-note{font-size:13px;line-height:1.5;color:var(--ink-muted-80);margin:0 0 20px;}
+  .results-note{font-size:13px;line-height:1.5;color:var(--ink-muted-80);margin:0 0 20px;min-height:3em;}
+  .results-note.is-off{visibility:hidden;}
   .live-metric-num{font-size:20px;font-size:clamp(17px,14.5cqi,46px);height:1.05em;font-weight:600;letter-spacing:-0.03em;color:var(--ink);line-height:1.05;white-space:nowrap;font-variant-numeric:tabular-nums;}
   .live-metric-num .suffix{font-size:0.4em;font-weight:500;color:var(--ink-muted-56);letter-spacing:-0.01em;white-space:nowrap;}
   .live-metric-lbl{font-size:13px;font-weight:500;color:var(--ink-muted-80);margin-top:4px;}
@@ -540,7 +541,7 @@
             </div>
           </div>
 
-          <p class="results-note" id="out-negotiate" hidden>메가·셀럽 등급은 인플루언서별로 조건이 달라 별도 협의가 필요합니다.</p>
+          <p class="results-note is-off" id="out-negotiate" aria-live="polite">메가·셀럽 등급은 인플루언서별로 조건이 달라 별도 협의가 필요합니다.</p>
 
           <div class="cost-hero">
             <div class="cost-hero-num" aria-hidden="true"><span class="cost-hero-blur"></span><span class="cost-hero-lock">🔒</span></div>
@@ -859,7 +860,8 @@
     setStat(document.getElementById("out-reach"), r.negotiable ? null : r.reachLow, "명", animate);
     setStat(document.getElementById("out-engagement"), r.negotiable ? null : r.engLow, "회", animate);
     var neg = document.getElementById("out-negotiate");
-    neg.hidden = !r.negotiable;
+    // 자리는 항상 차지하고 보이기만 바꾼다 — 별도 협의로 바뀔 때 창 높이가 변하지 않게
+    neg.classList.toggle("is-off", !r.negotiable);
     neg.textContent = TIER[state.tier].mult === null
       ? "메가·셀럽 등급은 인플루언서별로 조건이 달라 별도 협의가 필요합니다."
       : "시딩 수량이 500건을 넘으면 일정과 조건을 별도로 협의합니다.";
