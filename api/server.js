@@ -25,7 +25,10 @@ const nodemailer = require('nodemailer');
 const TURNSTILE_VERIFY_URL = 'https://challenges.cloudflare.com/turnstile/v0/siteverify';
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const PHONE_RE = /^[0-9+()\-\s]+$/;
-const CONTROL_RE = /[\u0000-\u001f\u007f\u2028\u2029]+/g;
+// \ud5c8\ube0c(SalesLeadIngest.cs IsLine/IsMultiline)\uac00 \uac70\ubd80\ud558\ub294 \uc81c\uc5b4\ubb38\uc790\ub97c \ubbf8\ub9ac \uc5c6\uc564\ub2e4. \uba54\uc77c\uacfc \ud5c8\ube0c\uac00 \uac19\uc740 \uc785\ub825\uc744 \ubc1b\uac8c \ud55c\ub2e4.
+const CONTROL_RE = /[\u0000-\u001f\u007f-\u009f\u2028\u2029]+/g;
+// \uc5ec\ub7ec \uc904 \uac12(message)\uc5d0\uc11c \t \n \r \ub9cc \ub0a8\uae34\ub2e4.
+const MESSAGE_CONTROL_RE = /[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f-\u009f]+/g;
 
 const LIMITS = {
   company: 100,
@@ -55,7 +58,10 @@ const KST_OFFSET_MS = 9 * 60 * 60 * 1000;
 
 const DUPLICATE_WINDOW_MS = 10 * 60 * 1000;
 
-const AXHUB_LEADS_URL = 'https://axhub.enclu.com/api/sales/leads';
+// 키와 고객 정보를 보내는 주소이므로 이 주소만 허용한다.
+const AXHUB_LEADS_HOST = 'axhub.enclu.com';
+const AXHUB_LEADS_PATH = '/api/sales/leads';
+const AXHUB_LEADS_URL = `https://${AXHUB_LEADS_HOST}${AXHUB_LEADS_PATH}`;
 const AXHUB_TIMEOUT_MS = 5000;
 const AXHUB_RETRY_DELAY_MS = 1000;
 // 수출바우처 버튼(data-quote-source="voucher")은 index.html 에만 있다.
@@ -64,6 +70,21 @@ const LEAD_PAGES = { index: 'index', tool: 'tool', voucher: 'index' };
 // ---------------------------------------------------------------------------
 // 설정
 // ---------------------------------------------------------------------------
+
+/** 비어 있으면 기본 주소. 허용한 허브 주소가 아니면 null (전달을 끈다). */
+function resolveLeadsUrl(raw) {
+  const value = String(raw || '').trim();
+  if (!value) return AXHUB_LEADS_URL;
+  let url;
+  try {
+    url = new URL(value);
+  } catch (_) {
+    return null;
+  }
+  const allowed = url.protocol === 'https:' && url.host === AXHUB_LEADS_HOST && url.pathname === AXHUB_LEADS_PATH &&
+    !url.username && !url.password && !url.search && !url.hash;
+  return allowed ? AXHUB_LEADS_URL : null;
+}
 
 function loadConfig(env = process.env) {
   const bool = (v, d) => (v === undefined || v === '' ? d : String(v).toLowerCase() === 'true');
@@ -87,7 +108,7 @@ function loadConfig(env = process.env) {
     turnstileSecret: env.TURNSTILE_SECRET || '',
     axhub: {
       leadKey: String(env.AXHUB_LEAD_KEY || '').trim(),
-      leadsUrl: String(env.AXHUB_LEADS_URL || '').trim() || AXHUB_LEADS_URL
+      leadsUrl: resolveLeadsUrl(env.AXHUB_LEADS_URL)
     },
     allowedOrigins
   };
@@ -152,9 +173,11 @@ function createSmtpSender(config) {
  * AX Hub 영업 리드 전달 (계약 sales-lead/2). 만든 함수는 절대 reject 하지 않으므로 기다리지 않고 호출한다.
  * 메일이 정식 접수 경로이고 허브는 병행 전달이다. 실패해도 상태 코드나 오류 이름만 남긴다.
  * 네트워크 오류·시간 초과·5xx 는 같은 Idempotency-Key 로 한 번만 다시 보낸다.
+ * testLeadsUrl 은 로컬 스텁을 쓰는 테스트 전용 훅이다. NODE_ENV=test 에서만 듣고, createApp 은 넘기지 않는다.
  */
-function createLeadForwarder(config, { fetchImpl = fetch, timeoutMs = AXHUB_TIMEOUT_MS, retryDelayMs = AXHUB_RETRY_DELAY_MS } = {}) {
-  const { leadKey, leadsUrl } = config.axhub;
+function createLeadForwarder(config, { fetchImpl = fetch, timeoutMs = AXHUB_TIMEOUT_MS, retryDelayMs = AXHUB_RETRY_DELAY_MS, testLeadsUrl } = {}) {
+  const { leadKey } = config.axhub;
+  const leadsUrl = config.nodeEnv === 'test' && testLeadsUrl ? testLeadsUrl : config.axhub.leadsUrl;
 
   async function post(body, idempotencyKey) {
     const ctrl = new AbortController();
@@ -181,7 +204,7 @@ function createLeadForwarder(config, { fetchImpl = fetch, timeoutMs = AXHUB_TIME
   }
 
   return async function forwardLead(data, submittedAt) {
-    if (!leadKey) return;
+    if (!leadKey || !leadsUrl) return;
     try {
       const body = JSON.stringify(buildLead(data, submittedAt));
       const idempotencyKey = crypto.randomUUID();
@@ -275,7 +298,7 @@ function validateQuote(body) {
     quantity: singleLine(body.quantity),
     vouchers: parseVouchers(body.vouchers),
     marketingConsent: parseMarketingConsent(body.marketingConsent),
-    message: typeof body.message === 'string' ? body.message.replace(/\r\n?/g, '\n').trim() : '',
+    message: typeof body.message === 'string' ? body.message.replace(/\r\n?/g, '\n').replace(MESSAGE_CONTROL_RE, '').trim() : '',
     context: sanitizeContext(body.context),
     source: typeof body.source === 'string' && Object.prototype.hasOwnProperty.call(SOURCE_LABELS, body.source) ? body.source : 'unknown'
   };
@@ -611,13 +634,16 @@ function start() {
   if (!config.smtp.host) {
     log('warn', 'SMTP_HOST is not set — mail sending will fail');
   }
+  if (!config.axhub.leadsUrl) {
+    log('warn', 'AXHUB_LEADS_URL is not the allowed hub address — hub lead forwarding is disabled');
+  }
 
   const app = createApp({ config });
   app.listen(config.port, () => {
     log('info', `listening on :${config.port}`, {
       env: config.nodeEnv,
       mailTo: config.mailTo,
-      hubLeads: config.axhub.leadKey ? 'on' : 'off',
+      hubLeads: config.axhub.leadKey && config.axhub.leadsUrl ? 'on' : 'off',
       cors: config.allowedOrigins.length ? config.allowedOrigins : 'same-origin'
     });
   });

@@ -8,6 +8,9 @@ process.env.NODE_ENV = 'test';
 const { test, describe, beforeEach, afterEach } = require('node:test');
 const assert = require('node:assert/strict');
 const http = require('node:http');
+const net = require('node:net');
+const path = require('node:path');
+const { spawn } = require('node:child_process');
 const { createApp, createLeadForwarder, loadConfig, buildLead, validateQuote, MARKETING_TEXT_VERSION, PRIVACY_TEXT_VERSION } = require('../server');
 
 const LEAD_KEY = 'test-lead-key-do-not-log';
@@ -155,12 +158,189 @@ describe('buildLead', () => {
   });
 });
 
+describe('control characters match the hub (IsLine / IsMultiline)', () => {
+  // 허브 판정을 옮긴 것: 한 줄 값은 제어문자 없음, 여러 줄 값은 \t \n \r 만 허용
+  const isLine = (s) => !/[\u0000-\u001f\u007f-\u009f]/.test(s);
+  const isMultiline = (s) => !/[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f-\u009f]/.test(s);
+  const CONTROLS = [];
+  for (let c = 0; c <= 0x1f; c++) CONTROLS.push(String.fromCharCode(c));
+  for (let c = 0x7f; c <= 0x9f; c++) CONTROLS.push(String.fromCharCode(c));
+  const code = (ch) => `U+${ch.charCodeAt(0).toString(16).padStart(4, '0')}`;
+
+  test('every control character in single-line fields becomes a space', () => {
+    for (const ch of CONTROLS) {
+      const lead = leadFrom({
+        company: `가${ch}나`,
+        contactName: `다${ch}라`,
+        context: { category: `마${ch}바`, tier: `사${ch}아`, goal: `자${ch}차` }
+      });
+      assert.equal(lead.company, '가 나', code(ch));
+      assert.equal(lead.contactName, '다 라', code(ch));
+      for (const value of [lead.company, lead.contactName, lead.phone, lead.email, lead.quantity, ...Object.values(lead.context)]) {
+        assert.ok(isLine(value), code(ch));
+      }
+    }
+  });
+
+  test('email with a control character is rejected, not forwarded', () => {
+    for (const ch of CONTROLS) {
+      const v = validateQuote(validPayload({ email: `ho${ch}ng@example.com` }));
+      assert.equal(v.ok, false, code(ch));
+      assert.ok(v.fields.email, code(ch));
+    }
+  });
+
+  test('message drops control characters except tab and line breaks', () => {
+    for (const ch of CONTROLS) {
+      const { message } = leadFrom({ message: `앞${ch}뒤` });
+      assert.ok(isMultiline(message), code(ch));
+      if (ch === '\t') assert.equal(message, '앞\t뒤');
+      else if (ch === '\n' || ch === '\r') assert.equal(message, '앞\n뒤', code(ch));
+      else assert.equal(message, '앞뒤', code(ch));
+    }
+  });
+
+  test('message: boundary code points around the removed ranges survive', () => {
+    assert.equal(leadFrom({ message: '~ é' }).message, '~ é');
+    assert.equal(leadFrom({ message: '첫 줄\r\n둘째 줄\t끝' }).message, '첫 줄\n둘째 줄\t끝');
+  });
+
+  test('message of only control characters becomes null', () => {
+    assert.equal(leadFrom({ message: '\u0000\u0001\u009f' }).message, null);
+  });
+
+  test('message length is checked after removal, at the limit', () => {
+    assert.equal(validateQuote(validPayload({ message: `${'x'.repeat(3000)}\u0000` })).ok, true);
+    assert.equal(validateQuote(validPayload({ message: 'x'.repeat(3001) })).ok, false);
+  });
+
+  test('mail and hub carry the same cleaned values', async () => {
+    const mails = [];
+    const hub = fakeFetch(201);
+    const cfg = config();
+    let pending;
+    const forward = createLeadForwarder(cfg, { fetchImpl: hub.impl, retryDelayMs: 0 });
+    const server = await listen(createApp({
+      config: cfg,
+      sendMail: async (mail) => { mails.push(mail); return {}; },
+      forwardLead: (...args) => { pending = forward(...args); return pending; }
+    }));
+    const res = await post(server, validPayload({ company: '엔클\u0085루', message: '안\u0000녕\u009f\n하세요' }));
+    await pending;
+    await new Promise((r) => server.close(r));
+
+    assert.equal(res.status, 200);
+    const lead = JSON.parse(hub.calls[0].init.body);
+    assert.equal(lead.company, '엔클 루');
+    assert.equal(lead.message, '안녕\n하세요');
+    assert.ok(mails[0].text.includes('업체명 / 브랜드명: 엔클 루\n'));
+    assert.ok(mails[0].text.includes('안녕\n하세요'));
+    assert.ok(isLine(lead.company) && isMultiline(lead.message));
+  });
+});
+
+describe('hub address allowlist', () => {
+  const DEFAULT_URL = 'https://axhub.enclu.com/api/sales/leads';
+  const REJECTED = [
+    'http://axhub.enclu.com/api/sales/leads',
+    'https://evil.example/api/sales/leads',
+    'https://axhub.enclu.com.evil.example/api/sales/leads',
+    'https://evil.example/?https://axhub.enclu.com/api/sales/leads',
+    'https://axhub.enclu.com:8443/api/sales/leads',
+    'https://axhub.enclu.com/api/sales/leads/',
+    'https://axhub.enclu.com/other',
+    'https://axhub.enclu.com/api/sales/leads?x=1',
+    'https://axhub.enclu.com/api/sales/leads#x',
+    'https://user:pw@axhub.enclu.com/api/sales/leads',
+    'http://127.0.0.1:3000/api/sales/leads',
+    'axhub.enclu.com/api/sales/leads',
+    'not a url'
+  ];
+
+  test('empty → default, the exact address → allowed', () => {
+    assert.equal(loadConfig({}).axhub.leadsUrl, DEFAULT_URL);
+    assert.equal(loadConfig({ AXHUB_LEADS_URL: '  ' }).axhub.leadsUrl, DEFAULT_URL);
+    assert.equal(loadConfig({ AXHUB_LEADS_URL: DEFAULT_URL }).axhub.leadsUrl, DEFAULT_URL);
+  });
+
+  test('anything else disables forwarding, in every NODE_ENV', () => {
+    for (const NODE_ENV of ['production', 'development', 'test']) {
+      for (const AXHUB_LEADS_URL of REJECTED) {
+        assert.equal(loadConfig({ NODE_ENV, AXHUB_LEADS_URL }).axhub.leadsUrl, null, `${NODE_ENV} ${AXHUB_LEADS_URL}`);
+      }
+    }
+  });
+
+  test('a rejected address is never called', async () => {
+    const hub = fakeFetch(201);
+    const { data } = validateQuote(validPayload());
+    const cfg = loadConfig({ NODE_ENV: 'production', AXHUB_LEAD_KEY: LEAD_KEY, AXHUB_LEADS_URL: 'http://127.0.0.1:3000/api/sales/leads' });
+    await createLeadForwarder(cfg, { fetchImpl: hub.impl })(data, new Date());
+    assert.equal(hub.calls.length, 0);
+  });
+
+  test('testLeadsUrl works only when NODE_ENV=test', async () => {
+    const { data } = validateQuote(validPayload());
+    const stub = 'http://127.0.0.1:3000/leads';
+    const urlFor = async (NODE_ENV) => {
+      const hub = fakeFetch(201);
+      await createLeadForwarder(loadConfig({ NODE_ENV, AXHUB_LEAD_KEY: LEAD_KEY }), { fetchImpl: hub.impl, retryDelayMs: 0, testLeadsUrl: stub })(data, new Date());
+      return hub.calls[0].url;
+    };
+    assert.equal(await urlFor('test'), stub);
+    assert.equal(await urlFor('production'), DEFAULT_URL);
+    assert.equal(await urlFor('development'), DEFAULT_URL);
+    assert.equal(await urlFor(undefined), DEFAULT_URL);
+  });
+
+  // 실제 프로세스를 띄워 기동 로그를 확인한다
+  function startupLogs(extraEnv) {
+    return new Promise((resolve, reject) => {
+      const probe = net.createServer();
+      probe.listen(0, '127.0.0.1', () => {
+        const { port } = probe.address();
+        probe.close(() => {
+          const child = spawn(process.execPath, [path.join(__dirname, '..', 'server.js')], {
+            env: { PATH: process.env.PATH, NODE_ENV: 'production', SMTP_PASS: 'x', PORT: String(port), ...extraEnv }
+          });
+          let out = '';
+          const timer = setTimeout(() => child.kill(), 10000);
+          const onData = (chunk) => {
+            out += chunk;
+            if (out.includes('listening on')) child.kill();
+          };
+          child.stdout.on('data', onData);
+          child.stderr.on('data', onData);
+          child.on('error', reject);
+          child.on('close', () => {
+            clearTimeout(timer);
+            resolve(out);
+          });
+        });
+      });
+    });
+  }
+
+  test('startup: a rejected address warns once without echoing the url or key, and hubLeads is off', async () => {
+    const out = await startupLogs({ AXHUB_LEAD_KEY: LEAD_KEY, AXHUB_LEADS_URL: 'http://evil.example/secret-path' });
+    assert.equal(out.split('hub lead forwarding is disabled').length - 1, 1);
+    assert.ok(out.includes('"hubLeads":"off"'));
+    for (const secret of ['evil.example', 'secret-path', LEAD_KEY]) assert.ok(!out.includes(secret), secret);
+  });
+
+  test('startup: the default address does not warn and hubLeads is on', async () => {
+    const out = await startupLogs({ AXHUB_LEAD_KEY: LEAD_KEY, AXHUB_LEADS_URL: '' });
+    assert.ok(!out.includes('hub lead forwarding is disabled'));
+    assert.ok(out.includes('"hubLeads":"on"'));
+    assert.ok(!out.includes(LEAD_KEY));
+  });
+});
+
 describe('loadConfig', () => {
   test('hub forwarding is off without a key, url has a default', () => {
     assert.deepEqual(loadConfig({}).axhub, { leadKey: '', leadsUrl: 'https://axhub.enclu.com/api/sales/leads' });
     assert.equal(loadConfig({ AXHUB_LEAD_KEY: '   ' }).axhub.leadKey, '');
     assert.equal(loadConfig({ AXHUB_LEADS_URL: '' }).axhub.leadsUrl, 'https://axhub.enclu.com/api/sales/leads');
-    assert.equal(loadConfig({ AXHUB_LEADS_URL: 'https://hub.example/leads' }).axhub.leadsUrl, 'https://hub.example/leads');
   });
 });
 
@@ -217,12 +397,14 @@ describe('POST /api/quote → hub', () => {
     assert.deepEqual(Object.keys(JSON.parse(init.body)).sort(), LEAD_KEYS);
   });
 
-  test('AXHUB_LEADS_URL overrides the default', async () => {
+  test('disallowed AXHUB_LEADS_URL → no hub call, mail still sent', async () => {
     const hub = fakeFetch(201);
     await boot({ fetchImpl: hub.impl, cfg: config({ AXHUB_LEAD_KEY: LEAD_KEY, AXHUB_LEADS_URL: 'https://hub.example/leads' }) });
-    await post(server, validPayload());
+    const res = await post(server, validPayload());
     await pending;
-    assert.equal(hub.calls[0].url, 'https://hub.example/leads');
+    assert.equal(res.status, 200);
+    assert.equal(mails.length, 1);
+    assert.equal(hub.calls.length, 0);
   });
 
   test('each submission gets its own Idempotency-Key', async () => {
@@ -389,8 +571,9 @@ describe('real fetch against a local stub hub', () => {
     const base = `http://127.0.0.1:${hub.address().port}`;
     const { data } = validateQuote(validPayload());
 
-    await createLeadForwarder(config({ AXHUB_LEAD_KEY: LEAD_KEY, AXHUB_LEADS_URL: `${base}/leads` }))(data, new Date());
-    await createLeadForwarder(config({ AXHUB_LEAD_KEY: LEAD_KEY, AXHUB_LEADS_URL: `${base}/moved` }))(data, new Date());
+    const cfg = config({ NODE_ENV: 'test', AXHUB_LEAD_KEY: LEAD_KEY });
+    await createLeadForwarder(cfg, { testLeadsUrl: `${base}/leads` })(data, new Date());
+    await createLeadForwarder(cfg, { testLeadsUrl: `${base}/moved` })(data, new Date());
     await new Promise((r) => { hub.close(r); hub.closeAllConnections(); });
 
     assert.deepEqual(seen.map((s) => s.path), ['/leads', '/moved']);

@@ -186,7 +186,7 @@ curl -o NUL -s -w "%{http_code}\n" https://influencer.enclu.com/llms.txt
    notepad api\.env
    ```
 
-3. `AXHUB_LEAD_KEY=` 뒤에 키를 붙여 넣고 저장합니다. `AXHUB_LEADS_URL`은 비워 두면 `https://axhub.enclu.com/api/sales/leads`를 씁니다.
+3. `AXHUB_LEAD_KEY=` 뒤에 키를 붙여 넣고 저장합니다. `AXHUB_LEADS_URL`은 비워 둡니다. `https://axhub.enclu.com/api/sales/leads`만 허용하며, 다른 주소를 넣으면 전달이 꺼지고 시작 로그에 경고가 남습니다.
 4. `.env`는 기동할 때 한 번만 읽으므로 다시 시작합니다.
 
    ```bat
@@ -194,7 +194,7 @@ curl -o NUL -s -w "%{http_code}\n" https://influencer.enclu.com/llms.txt
    pm2 logs seeding-quote-api --lines 50
    ```
 
-5. 시작 로그의 `"hubLeads":"on"`을 확인합니다. `off`면 키가 들어가지 않은 것입니다.
+5. 시작 로그의 `"hubLeads":"on"`을 확인합니다. `off`면 키가 없거나 `AXHUB_LEADS_URL`이 허용된 주소가 아닙니다.
 6. 폼을 한 번 보내고 메일 도착과 `hub lead forwarded {"status":201}` 로그를 확인합니다. 그다음 허브 화면에서 리드를 확인합니다.
 
 허브 전달 결과는 고객 응답에 영향을 주지 않습니다. 고객에게 보이는 성공과 실패는 메일 결과로만 정해집니다.

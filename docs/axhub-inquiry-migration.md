@@ -15,6 +15,8 @@ POST /api/quote → SMTP 메일 (성공/실패를 사용자에게 응답)
 ```
 
 - 설정: `AXHUB_LEAD_KEY`(비밀, 비우면 전달 안 함), `AXHUB_LEADS_URL`(선택, 기본 `https://axhub.enclu.com/api/sales/leads`). 설정 방법은 `docs/windows-deploy.md` 11단계.
+- `AXHUB_LEADS_URL`은 `https`, 호스트 `axhub.enclu.com`, 경로 `/api/sales/leads`만 허용한다. 다른 값이면 전달을 끄고 기동 때 경고를 한 번 남긴다. 로컬 스텁은 테스트 코드의 `testLeadsUrl` 훅으로만 쓸 수 있다 (`NODE_ENV=test` 한정).
+- 허브가 거부하는 제어문자는 검증 단계에서 없앤다. 메일과 허브가 같은 값을 받는다. 한 줄 값은 공백으로 바꾸고, `message`는 `\t` `\n` `\r`만 남기고 지운다 (`\r`은 기존처럼 `\n`으로 바뀐다).
 - 시간 제한 5초. 네트워크 오류·시간 초과·5xx는 1초 뒤 같은 `Idempotency-Key`로 1번 다시 보낸다. 400·401·404·429는 다시 보내지 않는다.
 - 전달 큐가 없다. 끝내 실패한 건과 PM2 재시작 때 전달 중이던 건은 허브에 들어가지 않고 메일에만 남는다.
 - `privacyTextVersion`은 `api/server.js`의 `PRIVACY_TEXT_VERSION`(`privacy-2026-11-04`)이다. `assets/quote-form.js`의 `CONSENT_HTML`을 고치면 함께 올린다.
@@ -33,7 +35,7 @@ POST /api/quote → SMTP 메일 (성공/실패를 사용자에게 응답)
 | `privacyConsent`, `privacyTextVersion` | `true`, `privacy-2026-11-04` |
 | `marketingConsent` | `agreed`, `agreedAt`(서버 수신 시각, KST `+09:00`), `textVersion`. 미동의면 나머지는 `null` |
 
-첫 실제 전달에서 확인할 것: 계약이 `context`의 일부 키만 보내는 형태를 받는지. 거부되면 `hub lead failed {"status":400}`이 남는다.
+허브의 `PayloadContext` 필드는 모두 기본값이 `null`이라 `context`의 일부 키만 보내도 된다.
 
 ## 1. 현재 구조 (전환 대상)
 
