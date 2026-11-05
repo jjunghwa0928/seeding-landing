@@ -7,7 +7,10 @@ load and visibly staggered loading. Local 720px WebP (~40KB) fixes that.
 
 Usage: python3 scripts/cache_reviews.py [--max-w 720] [--quality 78]
 Output: assets/reviews/<hash>.webp, manifest 'src' rewritten; original kept in 'origin'.
-Re-runs skip files already present.
+Also t/<hash>.webp (360px, manifest 'thumb') and s/<hash>.webp (240px, found by
+bake_magazine.py from 'thumb' for srcset).
+Re-runs skip files already present; a missing s/ file is rebuilt from the local copy
+without downloading.
 """
 import argparse, json, hashlib, io, os, urllib.request
 from PIL import Image, ImageOps
@@ -21,6 +24,16 @@ def fetch(url):
         return r.read()
 
 
+def save_small(im, spath, width, quality):
+    # A landscape image fills a square cell by height, so 240px wide would look soft;
+    # with no s/ file bake_magazine.py leaves that cell on the 360px thumb.
+    if im.width > im.height:
+        return
+    os.makedirs(os.path.dirname(spath), exist_ok=True)
+    small = im.resize((width, round(im.height * width / im.width)), Image.LANCZOS)
+    small.save(spath, "WEBP", quality=quality, method=4)
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--manifest", default="assets/weedy-manifest.json")
@@ -28,6 +41,7 @@ def main():
     ap.add_argument("--max-w", type=int, default=720)
     ap.add_argument("--quality", type=int, default=78)
     ap.add_argument("--thumb-w", type=int, default=360, help="hero-wall thumbnail width")
+    ap.add_argument("--small-w", type=int, default=240, help="srcset width for small grid cells and the mobile hero")
     a = ap.parse_args()
     os.makedirs(a.out_dir, exist_ok=True)
 
@@ -42,8 +56,16 @@ def main():
         name = hashlib.sha1(origin.encode()).hexdigest()[:16] + ".webp"
         path = os.path.join(a.out_dir, name)
         tpath = os.path.join(a.out_dir, "t", name)
+        spath = os.path.join(a.out_dir, "s", name)
         if os.path.exists(path) and os.path.exists(tpath):
-            it["src"] = path; it["thumb"] = tpath; skipped += 1; continue
+            it["src"] = path; it["thumb"] = tpath; skipped += 1
+            if not os.path.exists(spath):
+                try:
+                    with Image.open(path) as im:
+                        save_small(im.convert("RGB"), spath, a.small_w, a.quality - 8)
+                except Exception as e:
+                    print("FAIL", path, e); failed += 1
+            continue
         try:
             raw = fetch(origin)
             im = ImageOps.exif_transpose(Image.open(io.BytesIO(raw))).convert("RGB")
@@ -54,6 +76,7 @@ def main():
             th = im.resize((a.thumb_w, round(im.height * a.thumb_w / im.width)), Image.LANCZOS)
             tpath = os.path.join(a.out_dir, "t", name); os.makedirs(os.path.dirname(tpath), exist_ok=True)
             th.save(tpath, "WEBP", quality=a.quality - 8, method=4); it["thumb"] = tpath
+            save_small(im, spath, a.small_w, a.quality - 8)
             total_in += len(raw); total_out += os.path.getsize(path); done += 1
         except Exception as e:
             print("FAIL", origin, e); failed += 1

@@ -19,8 +19,8 @@
   // ==================================================================
   // SUBMIT ENDPOINT (api/server.js, IIS가 /api/*를 프록시):
   // The form POSTs JSON here. mailto: to mkt2@enclu.co.kr is only a
-  // fallback: offered inline on a network error or 5xx, and used right
-  // away on GitHub Pages, which has no API.
+  // fallback: offered inline on any failure other than field errors or
+  // 429, and used right away on GitHub Pages, which has no API.
   // ==================================================================
   var SUBMIT_ENDPOINT = '/api/quote';
   var HAS_API = !/\.github\.io$/i.test(window.location.hostname);
@@ -173,7 +173,7 @@
   dialog.innerHTML =
     '<div class="qf-topbar">' +
       '<a class="qf-home" href="' + HOME_URL + '" data-qf-home><span aria-hidden="true">←</span> 홈으로</a>' +
-      '<div class="qf-brand"><img src="assets/enclu_logo.png" width="28" height="28" alt=""><span>ENCLU</span></div>' +
+      '<div class="qf-brand"><img src="assets/IMG/logo/enclu-96.png" width="28" height="28" alt=""><span>ENCLU</span></div>' +
     '</div>' +
     '<button type="button" class="qf-close" data-qf-close aria-label="닫기">' + ICON_CLOSE + '</button>' +
     '<div class="qf-scroll">' +
@@ -345,10 +345,11 @@
         return;
       }
       enableSubmit();
-      if(res.status >= 500){ showMailFallback(payload); return; }
       if(res.status === 429){ statusEl.textContent = "잠시 후 다시 시도해 주세요."; return; }
-      return res.json().catch(function(){ return {}; }).then(function(body){
-        showServerErrors(res.status === 400 ? body.fields : null);
+      // 입력 탓일 때만 입력 확인을 안내합니다. 프록시·IIS의 404, 405, 411, 413과 5xx는 입력과 무관합니다.
+      if(res.status !== 400){ showMailFallback(payload); return; }
+      return res.json().catch(function(){ return null; }).then(function(body){
+        if(!showServerErrors(body && body.fields)) showMailFallback(payload);
       });
     }).catch(function(){
       enableSubmit();
@@ -369,7 +370,7 @@
     statusEl.appendChild(link);
   }
 
-  // 서버가 돌려준 항목별 오류를 폼의 오류 자리에 표시합니다.
+  // 서버가 돌려준 항목별 오류를 폼의 오류 자리에 표시합니다. 표시할 항목이 없으면 false를 돌려줍니다.
   function showServerErrors(fields){
     var firstInvalid = null;
     FIELDS.map(function(f){ return f.key; }).concat("consent", "marketingConsent").forEach(function(key){
@@ -378,7 +379,7 @@
       if(!firstInvalid) firstInvalid = dialog.querySelector("#qf-" + key);
     });
     if(firstInvalid) firstInvalid.focus();
-    else statusEl.textContent = "전송하지 못했습니다. 입력 내용을 확인한 뒤 다시 시도해 주세요.";
+    return !!firstInvalid;
   }
 
   // 입력을 고치는 즉시 해당 항목의 오류를 지웁니다.

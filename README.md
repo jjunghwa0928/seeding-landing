@@ -55,9 +55,10 @@ curl -X POST https://<도메인>/api/quote -H "Content-Type: application/json" -
 |---|---|---|
 | 200 `{"ok":true}` | 접수 완료 (허니팟에 걸린 요청도 같은 응답, 메일은 안 보냄) | 성공 화면 |
 | 400 `invalid_input` + `fields` | 필수값 누락, 형식 오류, 길이 초과, 동의 없음 | 항목별 오류 표시 |
-| 400 `captcha_failed` | Turnstile 토큰 없음 또는 검증 실패 | 입력 확인 안내 |
+| 400 `captcha_failed` | Turnstile 토큰 없음 또는 검증 실패 | 메일 앱으로 보내기 링크 |
 | 429 `rate_limited` / `duplicate` | IP당 10분 5회(전체 API 1분 60회) 초과, 또는 같은 내용 10분 내 재전송 | "잠시 후 다시 시도해 주세요." |
 | 502 `send_failed` | SMTP 발송 실패. `.env`와 `pm2 logs` 확인 | 메일 앱으로 보내기 링크 |
+| 그 밖의 응답 (404·405·411·413·5xx, JSON이 아닌 본문), 네트워크 오류 | 프록시·PM2 미연결 등 입력과 무관한 실패 | 메일 앱으로 보내기 링크 |
 
 ### 스팸 방지 선택: Turnstile 없음
 
@@ -67,7 +68,7 @@ eh(`enclu-contact-api`)는 production에서 `TURNSTILE_SECRET`을 필수로 요�
 
 ### GitHub Pages
 
-호스트명이 `github.io`로 끝나면 API가 없으므로 폼이 바로 `mailto:`를 연다. 다른 호스트에서는 네트워크 오류나 5xx일 때만 메일 앱으로 보내기 링크를 보여 준다.
+호스트명이 `github.io`로 끝나면 API가 없으므로 폼이 바로 `mailto:`를 연다. 다른 호스트에서는 항목별 오류(400 + `fields`)와 429를 뺀 모든 실패에 메일 앱으로 보내기 링크를 보여 준다.
 
 ### 개발
 
@@ -76,6 +77,20 @@ cd api
 npm install
 npm test     # node:test, 네트워크 없이 실행
 ```
+
+## 리뷰 이미지 크기
+
+`scripts/cache_reviews.py`가 원본 하나당 세 가지 크기를 만든다 (Pillow 필요). 파일 이름은 같고 폴더만 다르다.
+
+| 폴더 | 너비 | 쓰는 곳 |
+|---|---|---|
+| `assets/reviews/` | 720px | 2x2 칸의 큰 화면 |
+| `assets/reviews/t/` | 360px | 1x1 칸의 고해상도 화면, 2x2 칸의 작은 화면 |
+| `assets/reviews/s/` | 240px | 1x1 칸의 일반 화면, 모바일 히어로 |
+
+이미 받은 이미지는 다시 내려받지 않고 `s/`만 채운다. `scripts/bake_magazine.py --html index.html`이 격자의 `srcset`을 쓴다 (`s/` 파일이 없으면 그 칸은 `srcset` 없이 나온다). 히어로 벽(`#heroWall`)의 `srcset`은 이 스크립트 대상이 아니다.
+
+`web.config`는 `assets/reviews`, `assets/reels`, `assets/IMG`에 30일 브라우저 캐시를 준다. 파일명이 내용 해시인 것은 릴스뿐이므로 `immutable`은 쓰지 않는다 (리뷰는 원본 URL 해시, 브랜드 로고는 이름). 로고를 같은 이름으로 교체하면 최대 30일 동안 이전 이미지가 보일 수 있으니 이름을 바꾼다. `assets/`의 JS·CSS는 파일명이 그대로이므로 대상에서 뺐다.
 
 ## 릴스 교체 방법
 

@@ -46,7 +46,7 @@ Usage:
 Idempotent: regions are delimited by <!-- weedy:chapter:CAT --> markers;
 re-running regenerates them from the manifest without drifting.
 """
-import argparse, json, re, html, random
+import argparse, json, os, re, html, random
 
 CAT_ORDER = ["skin", "tone", "body", "food", "life"]
 CAT_KO = {"skin": "스킨케어", "tone": "색조", "body": "바디", "food": "식품", "life": "생활용품"}
@@ -58,6 +58,10 @@ VISIBLE_TARGET = 28  # approx tiles shown before "더 보기"
 VISIBLE_MIN = 18     # do not accept a seed whose valid cut shows fewer than this
 TAIL_1X1 = 8         # last N items of a chapter are forced 1x1 (hole backfill)
 MAX_SEED_TRIES = 500
+# Rendered cell widths (.mag-grid: 1200px chapter, 6 columns; 4 columns under 735px).
+SIZES_1X1 = "(max-width:734px) 23vw,190px"
+SIZES_2X2 = "(max-width:734px) 46vw,384px"
+SMALL_W, THUMB_W, FULL_W = 240, 360, 720
 
 # --------------------------------------------------------- dense simulator --
 
@@ -230,6 +234,22 @@ def pack_chapter(cat_items, cat):
 
 # ------------------------------------------------------------- HTML build --
 
+def srcset_attrs(it, size):
+    """Width candidates for the cell. 2x1 stays a single 360px file: its 384px cell has no smaller fit."""
+    if size == "2x2":
+        srcset = f'{it["thumb"]} {THUMB_W}w, {it["src"]} {FULL_W}w'
+        sizes = SIZES_2X2
+    elif size == "1x1":
+        small = it["thumb"].replace("/t/", "/s/")
+        if not os.path.exists(small):
+            return ""
+        srcset = f'{small} {SMALL_W}w, {it["thumb"]} {THUMB_W}w'
+        sizes = SIZES_1X1
+    else:
+        return ""
+    return f' srcset="{html.escape(srcset)}" sizes="{sizes}"'
+
+
 def item_html(it, size):
     cat = it["category"]
     cls = {"1x1": "", "2x1": " is-2x1", "2x2": " is-2x2"}[size]
@@ -240,7 +260,7 @@ def item_html(it, size):
     w, h = it.get("w", 720), it.get("h", 900)
     return (f'<a class="mag-item reveal{cls}" data-weedy-cat="{cat}"'
             f' href="{link}" target="_blank" rel="noopener">'
-            f'<img src="{src}" width="{w}" height="{h}" alt="{alt}" loading="lazy" decoding="async"></a>')
+            f'<img src="{src}"{srcset_attrs(it, size)} width="{w}" height="{h}" alt="{alt}" loading="lazy" decoding="async"></a>')
 
 
 def item_html_hidden(it, size):
@@ -253,7 +273,7 @@ def item_html_hidden(it, size):
     w, h = it.get("w", 720), it.get("h", 900)
     return (f'<a class="mag-item reveal mag-hide{cls}" data-weedy-cat="{cat}"'
             f' href="{link}" target="_blank" rel="noopener">'
-            f'<img src="{src}" width="{w}" height="{h}" alt="{alt}" loading="lazy" decoding="async"></a>')
+            f'<img src="{src}"{srcset_attrs(it, size)} width="{w}" height="{h}" alt="{alt}" loading="lazy" decoding="async"></a>')
 
 
 def chapter_html(cat, cat_items):
