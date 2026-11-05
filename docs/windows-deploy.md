@@ -173,6 +173,45 @@ curl -o NUL -s -w "%{http_code}\n" https://influencer.enclu.com/llms.txt
   "견적 문의가 접수되었습니다"가 뜨고 메일이 도착하는지 확인합니다.
 - 예상 실적 페이지(`/tool.html`)에서도 한 번 보내 봅니다. 메일 본문에 계산기에서 고른 조건이 들어 있어야 합니다.
 
+## 11. AX Hub 영업 리드 전달 켜기 (선택)
+
+접수된 문의를 메일과 함께 AX Hub에도 보냅니다. 메일은 그대로 나갑니다.
+키가 없으면 허브로 보내지 않고 메일만 보냅니다.
+
+1. 허브에서 발급한 리드 키를 준비합니다.
+2. `api\.env`를 엽니다.
+
+   ```bat
+   cd /d D:\WWW_ROOT\seeding-landing
+   notepad api\.env
+   ```
+
+3. `AXHUB_LEAD_KEY=` 뒤에 키를 붙여 넣고 저장합니다. `AXHUB_LEADS_URL`은 비워 둡니다. `https://axhub.enclu.com/api/sales/leads`만 허용하며, 다른 주소를 넣으면 전달이 꺼지고 시작 로그에 경고가 남습니다.
+4. `.env`는 기동할 때 한 번만 읽으므로 다시 시작합니다.
+
+   ```bat
+   pm2 restart seeding-quote-api
+   pm2 logs seeding-quote-api --lines 50
+   ```
+
+5. 시작 로그의 `"hubLeads":"on"`을 확인합니다. `off`면 키가 없거나 `AXHUB_LEADS_URL`이 허용된 주소가 아닙니다.
+6. 폼을 한 번 보내고 메일 도착과 `hub lead forwarded {"status":201}` 로그를 확인합니다. 그다음 허브 화면에서 리드를 확인합니다.
+
+허브 전달 결과는 고객 응답에 영향을 주지 않습니다. 고객에게 보이는 성공과 실패는 메일 결과로만 정해집니다.
+로그에는 상태 코드나 오류 이름만 남고, 키와 고객 정보는 남지 않습니다.
+
+| `hub lead failed` 로그 | 의미 | 조치 |
+|---|---|---|
+| `status: 404` | 허브에 발급되지 않은 키 | 허브에서 키 발급 여부 확인 |
+| `status: 401` | 키가 틀림 | `api\.env`의 값 확인 후 `pm2 restart seeding-quote-api` |
+| `status: 400` | 허브가 본문을 거부함 | 계약(`sales-lead/2`)과 `api/server.js`의 `buildLead` 비교 |
+| `status: 429` | 허브 요청 한도 초과. 다시 보내지 않음 | 해당 문의는 메일로 확인, 빈도가 잦으면 허브 쪽에 문의 |
+| `status: 5xx`, `reason: AbortError`(5초 초과), `reason: TypeError`(연결 실패) | 허브 장애, 네트워크 오류. 1번 다시 보낸 뒤에도 실패 | 허브 상태와 서버의 외부 접속 확인 |
+
+실패한 건은 자동으로 다시 보내지 않고 PM2 재시작 때 전달 중이던 건도 사라집니다. 병행 기간에는 메일이 원본입니다.
+
+끄려면 `AXHUB_LEAD_KEY=`를 비우고 `pm2 restart seeding-quote-api`를 실행합니다.
+
 ## 업데이트 (이후 배포)
 
 GitHub main에 머지된 뒤 서버에서 실행합니다.
