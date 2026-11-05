@@ -22,7 +22,6 @@ MAX_SECONDS = 30
 POSTER_AT = 1.0
 # Fit inside 720x1280 without upscaling; even dimensions because yuv420p requires them.
 SCALE = "scale='min(720,iw)':'min(1280,ih)':force_original_aspect_ratio=decrease:force_divisible_by=2"
-EAGER_CARDS = 4  # cards past this get preload="none"
 PLACEHOLDER = '<div class="reel-card is-placeholder" aria-hidden="true"></div>'
 STRIP_RE = re.compile(r'<!-- reels:strip -->.*?<!-- /reels:strip -->', re.S)
 SECTION_RE = re.compile(r'<section id="reels"[^>]*>')
@@ -122,9 +121,9 @@ def read_links(path, count):
 
 
 def card_html(n, stem, link, web_dir):
-    preload = "metadata" if n <= EAGER_CARDS else "none"
     label = f"숏폼 리뷰 영상 {n}"
-    video = (f'<video muted playsinline loop preload="{preload}" poster="{web_dir}/{stem}.webp" '
+    # data-poster: the reels script in index.html sets poster as the strip nears the screen.
+    video = (f'<video muted playsinline loop preload="none" data-poster="{web_dir}/{stem}.webp" '
              f'src="{web_dir}/{stem}.mp4"></video>')
     if link:
         return (f'<a class="reel-card" href="{html.escape(link, quote=True)}" target="_blank" rel="noopener" '
