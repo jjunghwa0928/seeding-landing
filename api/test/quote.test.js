@@ -11,7 +11,7 @@ const http = require('node:http');
 const fs = require('node:fs');
 const path = require('node:path');
 const { spawnSync } = require('node:child_process');
-const { createApp, loadConfig, startupError, validateQuote, buildMail, QUANTITY_OPTIONS, VOUCHERS, MARKETING_TEXT_VERSION } = require('../server');
+const { createApp, loadConfig, startupError, validateQuote, buildMail, MAIL_FROM_NAME, QUANTITY_OPTIONS, VOUCHERS, MARKETING_TEXT_VERSION } = require('../server');
 
 // 테스트 중 서버 로그는 숨긴다
 const origLog = console.log;
@@ -27,7 +27,7 @@ function baseConfig(overrides = {}) {
   return {
     ...loadConfig({}),
     mailTo: 'mkt2@enclu.co.kr',
-    mailFrom: 'mkt2@enclu.co.kr',
+    mailFrom: { name: MAIL_FROM_NAME, address: 'mkt2@enclu.co.kr' },
     turnstileSecret: '',
     allowedOrigins: [],
     ...overrides
@@ -133,7 +133,7 @@ describe('quote api', () => {
 
     const mail = sent[0];
     assert.equal(mail.to, 'mkt2@enclu.co.kr');
-    assert.equal(mail.from, 'mkt2@enclu.co.kr');
+    assert.deepEqual(mail.from, { name: 'ENCLU 시딩 견적 문의', address: 'mkt2@enclu.co.kr' });
     assert.equal(mail.replyTo, 'hong@example.com');
     assert.equal(mail.subject, '[시딩 견적 문의] 엔클루코스메틱 / 50~100명');
     assert.ok(mail.text.includes('업체명 / 브랜드명: 엔클루코스메틱\n담당자명: 홍길동\n'));

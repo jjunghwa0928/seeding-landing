@@ -55,7 +55,10 @@ notepad api\.env
 - `SMTP_PORT=465`
 - `SMTP_SECURE=true`
 - `SMTP_USER=mkt2@enclu.co.kr`
+- `MAIL_FROM=mkt2@enclu.co.kr`
 - `MAIL_TO=mkt2@enclu.co.kr`
+
+기존 서버 .env의 MAIL_FROM은 그대로 둬도 주소만 읽으므로 동작한다(권장: 주소만 남기기).
 
 주의할 점입니다.
 - `api\.env`는 `.gitignore`에 들어 있어서 git에 올라가지 않습니다. 이 파일을 커밋하거나 메신저로 보내지 않습니다.
