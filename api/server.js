@@ -86,6 +86,18 @@ function resolveLeadsUrl(raw) {
   return allowed ? AXHUB_LEADS_URL : null;
 }
 
+// 보낸 사람 이름은 코드에 고정한다. 윈도우 편집기가 .env 를 CP949 로 다시 저장하면 한글이 깨지기 때문이다.
+const MAIL_FROM_NAME = 'ENCLU 시딩 견적 문의';
+const DEFAULT_MAIL_ADDRESS = 'mkt2@enclu.co.kr';
+
+// MAIL_FROM 은 주소로만 읽는다. 예전 형식 "이름 <주소>" 이면 <> 안의 주소만 쓰고 이름은 버린다.
+function resolveFromAddress(env) {
+  const raw = String(env.MAIL_FROM || '').trim();
+  const angled = raw.match(/<([^<>\s]+)>/);
+  const address = angled ? angled[1] : raw;
+  return address || String(env.SMTP_USER || '').trim() || DEFAULT_MAIL_ADDRESS;
+}
+
 function loadConfig(env = process.env) {
   const bool = (v, d) => (v === undefined || v === '' ? d : String(v).toLowerCase() === 'true');
   const allowedOrigins = String(env.ALLOWED_ORIGINS || '')
@@ -103,7 +115,7 @@ function loadConfig(env = process.env) {
       user: env.SMTP_USER || '',
       pass: env.SMTP_PASS || ''
     },
-    mailFrom: env.MAIL_FROM || env.SMTP_USER || 'mkt2@enclu.co.kr',
+    mailFrom: { name: MAIL_FROM_NAME, address: resolveFromAddress(env) },
     mailTo: env.MAIL_TO || 'mkt2@enclu.co.kr',
     turnstileSecret: env.TURNSTILE_SECRET || '',
     axhub: {
@@ -651,4 +663,4 @@ function start() {
 
 if (require.main === module) start();
 
-module.exports = { createApp, createLeadForwarder, loadConfig, startupError, validateQuote, buildMail, buildLead, clientIp, createDuplicateGuard, LIMITS, QUANTITY_OPTIONS, VOUCHERS, MARKETING_TEXT_VERSION, PRIVACY_TEXT_VERSION };
+module.exports = { createApp, createLeadForwarder, loadConfig, MAIL_FROM_NAME, startupError, validateQuote, buildMail, buildLead, clientIp, createDuplicateGuard, LIMITS, QUANTITY_OPTIONS, VOUCHERS, MARKETING_TEXT_VERSION, PRIVACY_TEXT_VERSION };
